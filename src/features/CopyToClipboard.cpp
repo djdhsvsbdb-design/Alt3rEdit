@@ -30,16 +30,19 @@ class $modify(EditorUI) {
         }
     }
     void doPasteObjects(bool idk) {
-        if (
-            Mod::get()->template getSettingValue<bool>("copy-paste-from-clipboard") &&
-            isProbablyObjectString(clipboard::read())
-        ) {
-            GameManager::get()->m_editorClipboard = clipboard::read();
+        if (!Mod::get()->template getSettingValue<bool>("copy-paste-from-clipboard")) {
+            return EditorUI::doPasteObjects(idk);
+        }
+
+        // Read once so validation and pasting always use the same clipboard contents.
+        auto clipboardContent = clipboard::read();
+        if (isProbablyObjectString(clipboardContent)) {
+            GameManager::get()->m_editorClipboard = clipboardContent;
             EditorUI::doPasteObjects(idk);
             Notification::create("Pasted Objects from Clipboard", NotificationIcon::Info)->show();
+            return;
         }
-        else {
-            EditorUI::doPasteObjects(idk);
-        }
+
+        EditorUI::doPasteObjects(idk);
     }
 };
