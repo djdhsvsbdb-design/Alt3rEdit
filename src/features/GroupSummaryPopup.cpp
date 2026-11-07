@@ -431,7 +431,8 @@ void GroupSummaryPopup::loadPage(size_t page) {
     }
     m_groupsListContainer->updateLayout();
 
-    m_pageLabel->setString(fmt::format("Page {}/{}", m_page + 1, m_pages.pages.size() + 1).c_str());
+    const size_t pageCount = std::max<size_t>(1, m_pages.pages.size());
+    m_pageLabel->setString(fmt::format("Page {}/{}", m_page + 1, pageCount).c_str());
     m_matchesLabel->setString(fmt::format("(showing {} groups)", m_pages.totalMatches).c_str());
 
     be::enableButton(m_prevPageBtn, m_page > 0);
