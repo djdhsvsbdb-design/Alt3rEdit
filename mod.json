@@ -1,614 +1,651 @@
 {
-	"geode": "5.6.1",
-	"version": "6.10.0",
-	"gd": {
-		"win": "2.2081",
-		"mac": "2.2081",
-		"android": "2.2081",
-		"ios": "2.2081"
-	},
-	"id": "hjfod.betteredit",
-	"name": "Alt3rEdit",
-	"developers": ["HJfod"],
-	"description": "The Ultimate Editor Mod",
-	"links": {
-		"homepage": "https://betteredit.pro",
-		"source": "https://github.com/HJfod/BetterEdit",
-		"community": "https://discord.gg/UGHDfzQtpz"
-	},
-	"dependencies": {
-        "geode.node-ids": "1.21.0",
-		"hjfod.gmd-api": "1.5.0",
-		"cvolton.level-id-api": "2.0.0",
-		"alphalaneous.editortab_api": "2.0.3"
-	},
-	"resources": {
-		"spritesheets": {
-			"UISheet": [
-				"resources/*.png"
-			],
-			"ViewTabSheet": [
-				"resources/view/*.png"
-			]
-		},
-		"sprites": [
-			"resources/images/*.png"
-		]
-	},
-	"settings": {
-		"meta-section": {
-			"type": "title",
-			"name": "BetterEdit Settings"
-		},
-		"enable-changelog-popup": {
-			"type": "bool",
-			"name": "Show Changelog at Startup",
-			"description": "Show the <cj>Changelog</c> for new updates when starting up BetterEdit. Important updates that everyone should know about might override this behaviour, but if you disable this, you at least won't get changelogs for every single new Alpha version :) You can still always view the Changelog through the <cg>BetterEdit popup</c> in the <cj>Editor Pause Menu</c>",
-			"default": true
-		},
-		"level-section": {
-			"type": "title",
-			"name": "Level Settings"
-		},
-		"enable-auto-save": {
-			"type": "bool",
-			"name": "Enable Auto-Save",
-			"description": "Automatically saves the level in the editor at the specified rate, as well as creates a backup. The backups created by autosave get automatically deleted after 3 new ones have been created to avoid using too much disk space",
-			"default": true
-		},
-		"auto-save-rate": {
-			"type": "int",
-			"default": 10,
-			"min": 1,
-			"max": 60,
-			"name": "Auto-Save Rate (minutes)",
-			"description": "How often the level should be auto-saved.",
-			"control": {
-				"big-arrows": true
-			},
-			"enable-if": "enable-auto-save"
-		},
-		"quick-save": {
-			"type": "bool",
-			"default": true,
-			"name": "Quick Save",
-			"description": "Makes level saving faster by saving to a backup file rather than directly to the save file"
-		},
-		"copy-paste-from-clipboard": {
-			"type": "bool",
-			"default": true,
-			"name": "Copy & Paste to Clipboard",
-			"description": "Copy & paste objects to/from system clipboard. This means that when you copy objects, you can paste it in a text editor in its text representation, and also paste it in to the editor later"
-		},
-		"controls-section": {
-			"type": "title",
-			"name": "Mouse & Keybind Settings"
-		},
-		"enable-fixed-mouse-controls": {
-			"type": "bool",
-			"default": {
-				"win": true,
-				"mac": false
-			},
-			"name": "Improved Mouse Controls",
-			"description": "When enabled, you can scroll horizontally with Shift + Scroll Wheel & zoom with Control + Scroll Wheel",
-			"platforms": ["desktop"]
-		},
-		"mouse-move-on-zoom": {
-			"type": "bool",
-			"default": true,
-			"name": "Zoom Towards Cursor",
-			"description": "When enabled and while holding down the Control Key, zooming in the editor with the scroll wheel will be zoomed toward the cursor and not the center of the screen",
-			"platforms": ["desktop"],
-			"enable-if": "enable-fixed-mouse-controls"
-		},
-		"pinch-to-zoom": {
-			"type": "bool",
-			"default": true,
-			"name": "Pinch to Zoom",
-			"description": "When enabled, you can use two fingers to zoom",
-			"platforms": ["android"]
-		},
-		"scale-rotate-input-modifier-keys": {
-			"type": "bool",
-			"default": true,
-			"name": "Enable Shift/Control on Scale Input",
-			"description": "When holding the <cp>Shift</c> key, toggles snapping in the <co>Scale</c> and <cj>Rotate</c> controls, and when holding <cp>Control</c> toggles absolute position"
-		},
-		"ui-section": {
-			"type": "title",
-			"name": "UI Settings"
-		},
-		"scale-factor": {
-			"type": "float",
-			"default": 1.00,
-			"max": 1.00,
-			"min": 0.6,
-			"name": "Scale Factor",
-			"description": "The factor the UI should be scaled by. <cr>Requires re-entering the editor!</c>",
-			"control": {
-                "slider": true,
-				"slider-step": 0.025
-            }
-		},
-		"scale-pause": {
-			"type": "bool",
-			"default": true,
-			"name": "Scale Pause Menu",
-			"description": "Whether the editor pause menu should be scaled according to the scale factor aswell"
-		},
-		"scale-build-tabs": {
-			"type": "bool",
-			"default": true,
-			"name": "Scale Build Tabs",
-			"description": "Whether the tabs above the object selection area should be scaled according to the scale factor aswell"
-		},
-		"hide-trigger-ui": {
-			"type": "bool",
-			"default": false,
-			"name": "Hide Trigger Backgrounds",
-			"description": "Hides the <cc>backgrounds</c> on all triggers when using sliders, like with <cl>shader</c> triggers"
-		},
-		"show-zoom-text": {
-			"type": "bool",
-			"default": true,
-			"name": "Show Zoom Text",
-			"description": "When enabled, flashes the current zoom level as text when you zoom in / out in the editor"
-		},
-		"grid-size-controls": {
-			"type": "bool",
-			"default": true,
-			"name": "Show Grid Size Controls",
-			"description": "Shows controls in the UI for adjusting the size of the grid. <cr>Requires re-entering the editor!</c>",
-			"platforms": ["win", "android64"]
-		},
-		"show-grid-on-size-change": {
-			"type": "bool",
-			"default": true,
-			"name": "Show Grid on Size Change",
-			"description": "If the grid is currently hidden and you use the controls to change its size, its toggled on",
-			"platforms": ["win", "android64"],
-			"enable-if": "grid-size-controls"
-		},
-		"redesigned-uis-section": {
-			"type": "title",
-			"name": "Redesigned/Improved UIs"
-		},
-		"view-menu": {
-			"type": "bool",
-			"default": true,
-			"name": "Show View Tab",
-			"description": "Adds a new fourth tab to the editor with buttons from quickly toggling on/off the visibility of features"
-		},
-		"better-font-select": {
-			"type": "bool",
-			"default": true,
-			"name": "New Font Selection Menu",
-			"description": "Replaces the old font select screen with a better one with scrolling"
-		},
-		"new-edit-menu": {
-			"type": "bool",
-			"default": true,
-			"name": "New Edit Menu",
-			"description": "Changes the object moving menu to have the move button grouped directionally rather than in a list. <cr>Requires re-entering the editor!</c>"
-		},
-		"new-color-menu": {
-			"type": "bool",
-			"default": true,
-			"name": "New Color Menu",
-			"description": "Changes the object color selection menu to show more channels aswell as previews for colors and special colors"
-		},
-		"larger-color-menu": {
-			"type": "bool",
-			"default": {
-				"win": false,
-				"mac": false,
-				"android": true
-			},
-			"name": "Larger Color Menu",
-			"description": "If you're using the <cr>New Color Menu</c>, this makes the color channel buttons a bit larger",
-			"enable-if": "new-color-menu"
-		},
-		"group-summary": {
-			"type": "bool",
-			"default": true,
-			"name": "Group Summary Button",
-			"description": "Show a button for opening <co>Group Summary</c> in the editor toolbar. You can alternatively set a keybind for opening <co>Group Summary</c>.",
-			"enable-if-description": "This feature is Supporter-only, but will be free soon!"
-		},
-		"trigger-indicator-section": {
-			"type": "title",
-			"name": "Trigger Indicators",
-			"description": "<cj>Trigger Indicators</c> draw lines between triggers and their target objects"
-		},
-		"trigger-indicators": {
-			"type": "bool",
-			"name": "Enable Trigger Indicators",
-			"default": false,
-			"description": "Enables <cj>Trigger Indicators</c>, which draws lines between triggers and their target objects. This is the same as the vanilla \"Trace In/Out\" feature, except that implemented a little differently. This does not effect the Trace feature in any way"
-		},
-		"trigger-indicator-colors": {
-			"type": "string",
-			"one-of": ["None", "Selected Only", "All"],
-			"default": "Selected Only",
-			"name": "Trigger Indicators: Dynamic Colors",
-			"description": "Control whether <cj>Trigger Indicators</c> should be colored based on the trigger, or if they should just be white",
-			"enable-if": "trigger-indicators"
-		},
-		"trigger-indicator-thickness": {
-			"type": "float",
-			"default": 2,
-			"min": 1,
-			"max": 10,
-			"control": {
-				"slider": true,
-				"slider-step": 0.1
-			},
-			"name": "Trigger Indicators: Line Thickness",
-			"description": "Control the width of the <cj>Trigger Indicators</c> lines",
-			"enable-if": "trigger-indicators"
-		},
-		"trigger-indicator-opacity": {
-			"type": "float",
-			"default": 1,
-			"min": 0,
-			"max": 1,
-			"control": {
-				"slider": true,
-				"slider-step": 0.1,
-				"arrows": false,
-				"big-arrows": false
-			},
-			"name": "Trigger Indicators: Line Opacity",
-			"description": "Control the opacity of the <cj>Trigger Indicators</c> lines",
-			"enable-if": "trigger-indicators"
-		},
-		"trigger-indicator-tickheads": {
-			"type": "bool",
-			"default": false,
-			"name": "Trigger Indicators: Arrow Heads",
-			"description": "If true, <cj>Trigger Indicators</c> have arrowheads at the end",
-			"enable-if": "trigger-indicators"
-		},
-		"keybinds-section": {
-			"type": "title",
-			"name": "Keybinds"
-		},
-		"keybind-view-mode": {
-			"type": "keybind",
-			"name": "View Mode",
-			"description": "Toggle the View Tab",
-			"category": "editor",
-			"default": ["Four"],
-			"migrate-from": "hjfod.betteredit/view-mode"
-		},
-		"keybind-rotate-45-ccw": {
-			"type": "keybind",
-			"name": "Rotate 45 CCW",
-			"description": "Rotate the Selected Object(s) 45 Degrees Counter-Clockwise",
-			"category": "editor",
-			"default": ["Shift+Q"],
-			"migrate-from": "hjfod.betteredit/rotate-45-ccw"
-		},
-        "keybind-rotate-45-cw": {
-			"type": "keybind",
-        	"name": "Rotate 45 CW",
-        	"description": "Rotate the Selected Object(s) 45 Degrees Clockwise",
-			"category": "editor",
-			"default": ["Shift+E"],
-			"migrate-from": "hjfod.betteredit/rotate-45-cw"
-		},
-        "keybind-rotate-snap": {
-			"type": "keybind",
-        	"name": "Rotate Snap",
-        	"description": "Rotate the Selected Object(s) to Match Adjacent Slopes",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/rotate-snap"
-		},
-        "keybind-show-scale": {
-			"type": "keybind",
-        	"name": "Toggle Scale Control",
-        	"description": "Toggle the object scaling controls",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/show-scale"
-		},
-        "keybind-show-scale-xy": {
-			"type": "keybind",
-        	"name": "Toggle Scale X/Y Control",
-        	"description": "Toggle the object scaling by X/Y controls",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/show-scale-xy"
-		},
-        "keybind-save-level": {
-			"type": "keybind",
-        	"name": "Save Level",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/save-level"
-		},
-		"keybind-pause-resume-playtest": {
-			"type": "keybind",
-        	"name": "Pause/Resume Playtest",
-        	"description": "Pauses or resumes the current playtest. Does not start playtesting",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/pause-resume-playtest"
-		},
-        "keybind-build-helper": {
-			"type": "keybind",
-        	"name": "Build Helper",
-        	"description": "Executes the <cy>Build Helper</c> feature, aka remaps Group and Color IDs of the selected objects to unused ones",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/build-helper"
-		},
-        "keybind-create-loop": {
-			"type": "keybind",
-        	"name": "Create loop",
-        	"description": "Executes the <cy>Create Loop</c> feature, aka makes a Spawn Trigger loop",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/create-loop"
-		},
-        "keybind-align-x": {
-			"type": "keybind",
-        	"name": "Align X",
-        	"description": "Executes the <cy>Align X</c> feature, aka aligns all of the selected objects along the X axis",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/align-x"
-		},
-        "keybind-align-y": {
-			"type": "keybind",
-        	"name": "Align Y",
-        	"description": "Executes the <cy>Align Y</c> feature, aka aligns all of the selected objects along the Y axis",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/align-y"
-		},
-        "keybind-toggle-link-controls": {
-			"type": "keybind",
-        	"name": "Toggle Link Controls",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/toggle-link-controls"
-		},
-        "keybind-open-edit-object": {
-			"type": "keybind",
-        	"name": "Edit Object",
-        	"description": "Open the <cb>Edit Object</c> popup for the selected objects",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/open-edit-object"
-		},
-        "keybind-open-edit-group": {
-			"type": "keybind",
-        	"name": "Edit Group",
-        	"description": "Open the <co>Edit Group</c> popup for the selected objects",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/open-edit-group"
-		},
-        "keybind-open-edit-special": {
-			"type": "keybind",
-        	"name": "Edit Special",
-        	"description": "Open the <cj>Edit Special</c> popup for the selected objects",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/open-edit-special"
-		},
-        "keybind-copy-values": {
-			"type": "keybind",
-        	"name": "Copy Values",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/copy-values"
-		},
-        "keybind-paste-state": {
-			"type": "keybind",
-        	"name": "Paste State",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/paste-state"
-		},
-        "keybind-paste-color": {
-			"type": "keybind",
-        	"name": "Paste Color",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/paste-color"
-		},
-        "keybind-enlarge-grid-size": {
-			"type": "keybind",
-        	"name": "Increase Grid Size",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/enlarge-grid-size"
-		},
-        "keybind-ensmallen-grid-size": {
-			"type": "keybind",
-        	"name": "Decrease Grid Size",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/ensmallen-grid-size"
-		},
-        "keybind-select-all": {
-			"type": "keybind",
-        	"name": "Select All",
-        	"description": "Select All Object(s)",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/select-all"
-		},
-        "keybind-select-all-left": {
-			"type": "keybind",
-        	"name": "Select All Left",
-        	"description": "Select All Object(s) Left of the Screen",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/select-all-left"
-		},
-        "keybind-select-all-right": {
-			"type": "keybind",
-        	"name": "Select All Right",
-        	"description": "Select All Object(s) Right of the Screen",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/select-all-right"
-		},
-        "keybind-show-ui": {
-			"type": "keybind",
-        	"name": "Show UI",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/show-ui"
-		},
-        "keybind-hide-ui": {
-			"type": "keybind",
-        	"name": "Hide UI",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/hide-ui"
-		},
-        "keybind-group-summary": {
-			"type": "keybind",
-        	"name": "Open Group Summary",
-        	"description": "Opens up <co>Group Summary</c>, aka a list showing which groups are in use",
-			"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/group-summary"
-		},
-        "keybind-move-obj-half-left": {
-			"type": "keybind",
-        	"name": "Move Object Half Left",
-        	"description": "Move Selected Object(s) half of a Block left (15 Units)",
-        	"category": "editor",
-			"default": ["Ctrl+Alt+A"],
-			"migrate-from": "hjfod.betteredit/move-obj-half-left"
-		},
-        "keybind-move-obj-half-right": {
-			"type": "keybind",
-        	"name": "Move Object Half Right",
-        	"description": "Move Selected Object(s) half of a Block right (15 Units)",
-        	"category": "editor",
-			"default": ["Ctrl+Alt+D"],
-			"migrate-from": "hjfod.betteredit/move-obj-half-right"
-		},
-        "keybind-move-obj-half-up": {
-			"type": "keybind",
-        	"name": "Move Object Half Up",
-        	"description": "Move Selected Object(s) half of a Block up (15 Units)",
-        	"category": "editor",
-			"default": ["Ctrl+Alt+W"],
-			"migrate-from": "hjfod.betteredit/move-obj-half-up"
-		},
-        "keybind-move-obj-half-down": {
-			"type": "keybind",
-        	"name": "Move Object Half Down",
-        	"description": "Move Selected Object(s) half of a Block down (15 Units)",
-        	"category": "editor",
-			"default": ["Ctrl+Alt+S"],
-			"migrate-from": "hjfod.betteredit/move-obj-half-down"
-		},
-        "keybind-move-obj-quarter-left": {
-			"type": "keybind",
-        	"name": "Move Object Quarter Left",
-        	"description": "Move Selected Object(s) quarter of a Block left (7.5 Units)",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/move-obj-quarter-left"
-		},
-        "keybind-move-obj-quarter-right": {
-			"type": "keybind",
-        	"name": "Move Object Quarter Right",
-        	"description": "Move Selected Object(s) quarter of a Block right (7.5 Units)",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/move-obj-quarter-right"
-		},
-        "keybind-move-obj-quarter-up": {
-			"type": "keybind",
-        	"name": "Move Object Quarter Up",
-        	"description": "Move Selected Object(s) quarter of a Block up (7.5 Units)",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/move-obj-quarter-up"
-		},
-        "keybind-move-obj-quarter-down": {
-			"type": "keybind",
-        	"name": "Move Object Quarter Down",
-        	"description": "Move Selected Object(s) quarter of a Block down (7.5 Units)",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/move-obj-quarter-down"
-		},
-        "keybind-move-obj-eighth-left": {
-			"type": "keybind",
-        	"name": "Move Object Eighth Left",
-        	"description": "Move Selected Object(s) eighth of a Block left (3.75 Units)",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/move-obj-eighth-left"
-		},
-        "keybind-move-obj-eighth-right": {
-			"type": "keybind",
-        	"name": "Move Object Eighth Right",
-        	"description": "Move Selected Object(s) eighth of a Block right (3.75 Units)",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/move-obj-eighth-right"
-		},
-        "keybind-move-obj-eighth-up": {
-			"type": "keybind",
-        	"name": "Move Object Eighth Up",
-        	"description": "Move Selected Object(s) eighth of a Block up (3.75 Units)",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/move-obj-eighth-up"
-		},
-        "keybind-move-obj-eighth-down": {
-			"type": "keybind",
-        	"name": "Move Object Eighth Down",
-        	"description": "Move Selected Object(s) eighth of a Block down (3.75 Units)",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/move-obj-eighth-down"
-		},
-        "keybind-move-obj-big-left": {
-			"type": "keybind",
-        	"name": "Move Object Big Left",
-        	"description": "Move Selected Object(s) 5 Blocks left (150 Units)",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/move-obj-big-left"
-		},
-        "keybind-move-obj-big-right": {
-			"type": "keybind",
-        	"name": "Move Object Big Right",
-        	"description": "Move Selected Object(s) 5 Blocks right (150 Units)",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/move-obj-big-right"
-		},
-        "keybind-move-obj-big-up": {
-			"type": "keybind",
-        	"name": "Move Object Big Up",
-        	"description": "Move Selected Object(s) 5 Blocks up (150 Units)",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/move-obj-big-up"
-		},
-        "keybind-move-obj-big-down": {
-			"type": "keybind",
-        	"name": "Move Object Big Down",
-        	"description": "Move Selected Object(s) 5 Blocks down (150 Units)",
-        	"category": "editor",
-			"default": [],
-			"migrate-from": "hjfod.betteredit/move-obj-big-down"
-		}
-	},
-	"tags": ["editor", "enhancement", "utility", "customization"]
+  "geode": "5.6.1",
+  "version": "6.10.0",
+  "gd": {
+    "win": "2.2081",
+    "mac": "2.2081",
+    "android": "2.2081",
+    "ios": "2.2081"
+  },
+  "id": "hjfod.betteredit",
+  "name": "Alt3rEdit",
+  "developers": [
+    "HJfod"
+  ],
+  "description": "The Ultimate Editor Mod",
+  "links": {
+    "homepage": "https://editool.ru/?lang=ru",
+    "source": "https://github.com/HJfod/BetterEdit",
+    "community": "https://discord.gg/UGHDfzQtpz"
+  },
+  "dependencies": {
+    "geode.node-ids": "1.21.0",
+    "hjfod.gmd-api": "1.5.0",
+    "cvolton.level-id-api": "2.0.0",
+    "alphalaneous.editortab_api": "2.0.3"
+  },
+  "resources": {
+    "spritesheets": {
+      "UISheet": [
+        "resources/*.png"
+      ],
+      "ViewTabSheet": [
+        "resources/view/*.png"
+      ]
+    },
+    "sprites": [
+      "resources/images/*.png"
+    ]
+  },
+  "settings": {
+    "meta-section": {
+      "type": "title",
+      "name": "BetterEdit Settings"
+    },
+    "enable-changelog-popup": {
+      "type": "bool",
+      "name": "Show Changelog at Startup",
+      "description": "Show the <cj>Changelog</c> for new updates when starting up BetterEdit. Important updates that everyone should know about might override this behaviour, but if you disable this, you at least won't get changelogs for every single new Alpha version :) You can still always view the Changelog through the <cg>BetterEdit popup</c> in the <cj>Editor Pause Menu</c>",
+      "default": true
+    },
+    "level-section": {
+      "type": "title",
+      "name": "Level Settings"
+    },
+    "enable-auto-save": {
+      "type": "bool",
+      "name": "Enable Auto-Save",
+      "description": "Automatically saves the level in the editor at the specified rate, as well as creates a backup. The backups created by autosave get automatically deleted after 3 new ones have been created to avoid using too much disk space",
+      "default": true
+    },
+    "auto-save-rate": {
+      "type": "int",
+      "default": 10,
+      "min": 1,
+      "max": 60,
+      "name": "Auto-Save Rate (minutes)",
+      "description": "How often the level should be auto-saved.",
+      "control": {
+        "big-arrows": true
+      },
+      "enable-if": "enable-auto-save"
+    },
+    "quick-save": {
+      "type": "bool",
+      "default": true,
+      "name": "Quick Save",
+      "description": "Makes level saving faster by saving to a backup file rather than directly to the save file"
+    },
+    "copy-paste-from-clipboard": {
+      "type": "bool",
+      "default": true,
+      "name": "Copy & Paste to Clipboard",
+      "description": "Copy & paste objects to/from system clipboard. This means that when you copy objects, you can paste it in a text editor in its text representation, and also paste it in to the editor later"
+    },
+    "controls-section": {
+      "type": "title",
+      "name": "Mouse & Keybind Settings"
+    },
+    "enable-fixed-mouse-controls": {
+      "type": "bool",
+      "default": {
+        "win": true,
+        "mac": false
+      },
+      "name": "Improved Mouse Controls",
+      "description": "When enabled, you can scroll horizontally with Shift + Scroll Wheel & zoom with Control + Scroll Wheel",
+      "platforms": [
+        "desktop"
+      ]
+    },
+    "mouse-move-on-zoom": {
+      "type": "bool",
+      "default": true,
+      "name": "Zoom Towards Cursor",
+      "description": "When enabled and while holding down the Control Key, zooming in the editor with the scroll wheel will be zoomed toward the cursor and not the center of the screen",
+      "platforms": [
+        "desktop"
+      ],
+      "enable-if": "enable-fixed-mouse-controls"
+    },
+    "pinch-to-zoom": {
+      "type": "bool",
+      "default": true,
+      "name": "Pinch to Zoom",
+      "description": "When enabled, you can use two fingers to zoom",
+      "platforms": [
+        "android"
+      ]
+    },
+    "scale-rotate-input-modifier-keys": {
+      "type": "bool",
+      "default": true,
+      "name": "Enable Shift/Control on Scale Input",
+      "description": "When holding the <cp>Shift</c> key, toggles snapping in the <co>Scale</c> and <cj>Rotate</c> controls, and when holding <cp>Control</c> toggles absolute position"
+    },
+    "ui-section": {
+      "type": "title",
+      "name": "UI Settings"
+    },
+    "scale-factor": {
+      "type": "float",
+      "default": 1,
+      "max": 1,
+      "min": 0.6,
+      "name": "Scale Factor",
+      "description": "The factor the UI should be scaled by. <cr>Requires re-entering the editor!</c>",
+      "control": {
+        "slider": true,
+        "slider-step": 0.025
+      }
+    },
+    "scale-pause": {
+      "type": "bool",
+      "default": true,
+      "name": "Scale Pause Menu",
+      "description": "Whether the editor pause menu should be scaled according to the scale factor aswell"
+    },
+    "scale-build-tabs": {
+      "type": "bool",
+      "default": true,
+      "name": "Scale Build Tabs",
+      "description": "Whether the tabs above the object selection area should be scaled according to the scale factor aswell"
+    },
+    "hide-trigger-ui": {
+      "type": "bool",
+      "default": false,
+      "name": "Hide Trigger Backgrounds",
+      "description": "Hides the <cc>backgrounds</c> on all triggers when using sliders, like with <cl>shader</c> triggers"
+    },
+    "show-zoom-text": {
+      "type": "bool",
+      "default": true,
+      "name": "Show Zoom Text",
+      "description": "When enabled, flashes the current zoom level as text when you zoom in / out in the editor"
+    },
+    "grid-size-controls": {
+      "type": "bool",
+      "default": true,
+      "name": "Show Grid Size Controls",
+      "description": "Shows controls in the UI for adjusting the size of the grid. <cr>Requires re-entering the editor!</c>",
+      "platforms": [
+        "win",
+        "android64"
+      ]
+    },
+    "show-grid-on-size-change": {
+      "type": "bool",
+      "default": true,
+      "name": "Show Grid on Size Change",
+      "description": "If the grid is currently hidden and you use the controls to change its size, its toggled on",
+      "platforms": [
+        "win",
+        "android64"
+      ],
+      "enable-if": "grid-size-controls"
+    },
+    "redesigned-uis-section": {
+      "type": "title",
+      "name": "Redesigned/Improved UIs"
+    },
+    "view-menu": {
+      "type": "bool",
+      "default": true,
+      "name": "Show View Tab",
+      "description": "Adds a new fourth tab to the editor with buttons from quickly toggling on/off the visibility of features"
+    },
+    "better-font-select": {
+      "type": "bool",
+      "default": true,
+      "name": "New Font Selection Menu",
+      "description": "Replaces the old font select screen with a better one with scrolling"
+    },
+    "new-edit-menu": {
+      "type": "bool",
+      "default": true,
+      "name": "New Edit Menu",
+      "description": "Changes the object moving menu to have the move button grouped directionally rather than in a list. <cr>Requires re-entering the editor!</c>"
+    },
+    "new-color-menu": {
+      "type": "bool",
+      "default": true,
+      "name": "New Color Menu",
+      "description": "Changes the object color selection menu to show more channels aswell as previews for colors and special colors"
+    },
+    "larger-color-menu": {
+      "type": "bool",
+      "default": {
+        "win": false,
+        "mac": false,
+        "android": true
+      },
+      "name": "Larger Color Menu",
+      "description": "If you're using the <cr>New Color Menu</c>, this makes the color channel buttons a bit larger",
+      "enable-if": "new-color-menu"
+    },
+    "group-summary": {
+      "type": "bool",
+      "default": true,
+      "name": "Group Summary Button",
+      "description": "Show a button for opening <co>Group Summary</c> in the editor toolbar. You can alternatively set a keybind for opening <co>Group Summary</c>.",
+      "enable-if-description": "This feature is Supporter-only, but will be free soon!"
+    },
+    "trigger-indicator-section": {
+      "type": "title",
+      "name": "Trigger Indicators",
+      "description": "<cj>Trigger Indicators</c> draw lines between triggers and their target objects"
+    },
+    "trigger-indicators": {
+      "type": "bool",
+      "name": "Enable Trigger Indicators",
+      "default": false,
+      "description": "Enables <cj>Trigger Indicators</c>, which draws lines between triggers and their target objects. This is the same as the vanilla \"Trace In/Out\" feature, except that implemented a little differently. This does not effect the Trace feature in any way"
+    },
+    "trigger-indicator-colors": {
+      "type": "string",
+      "one-of": [
+        "None",
+        "Selected Only",
+        "All"
+      ],
+      "default": "Selected Only",
+      "name": "Trigger Indicators: Dynamic Colors",
+      "description": "Control whether <cj>Trigger Indicators</c> should be colored based on the trigger, or if they should just be white",
+      "enable-if": "trigger-indicators"
+    },
+    "trigger-indicator-thickness": {
+      "type": "float",
+      "default": 2,
+      "min": 1,
+      "max": 10,
+      "control": {
+        "slider": true,
+        "slider-step": 0.1
+      },
+      "name": "Trigger Indicators: Line Thickness",
+      "description": "Control the width of the <cj>Trigger Indicators</c> lines",
+      "enable-if": "trigger-indicators"
+    },
+    "trigger-indicator-opacity": {
+      "type": "float",
+      "default": 1,
+      "min": 0,
+      "max": 1,
+      "control": {
+        "slider": true,
+        "slider-step": 0.1,
+        "arrows": false,
+        "big-arrows": false
+      },
+      "name": "Trigger Indicators: Line Opacity",
+      "description": "Control the opacity of the <cj>Trigger Indicators</c> lines",
+      "enable-if": "trigger-indicators"
+    },
+    "trigger-indicator-tickheads": {
+      "type": "bool",
+      "default": false,
+      "name": "Trigger Indicators: Arrow Heads",
+      "description": "If true, <cj>Trigger Indicators</c> have arrowheads at the end",
+      "enable-if": "trigger-indicators"
+    },
+    "keybinds-section": {
+      "type": "title",
+      "name": "Keybinds"
+    },
+    "keybind-view-mode": {
+      "type": "keybind",
+      "name": "View Mode",
+      "description": "Toggle the View Tab",
+      "category": "editor",
+      "default": [
+        "Four"
+      ],
+      "migrate-from": "hjfod.betteredit/view-mode"
+    },
+    "keybind-rotate-45-ccw": {
+      "type": "keybind",
+      "name": "Rotate 45 CCW",
+      "description": "Rotate the Selected Object(s) 45 Degrees Counter-Clockwise",
+      "category": "editor",
+      "default": [
+        "Shift+Q"
+      ],
+      "migrate-from": "hjfod.betteredit/rotate-45-ccw"
+    },
+    "keybind-rotate-45-cw": {
+      "type": "keybind",
+      "name": "Rotate 45 CW",
+      "description": "Rotate the Selected Object(s) 45 Degrees Clockwise",
+      "category": "editor",
+      "default": [
+        "Shift+E"
+      ],
+      "migrate-from": "hjfod.betteredit/rotate-45-cw"
+    },
+    "keybind-rotate-snap": {
+      "type": "keybind",
+      "name": "Rotate Snap",
+      "description": "Rotate the Selected Object(s) to Match Adjacent Slopes",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/rotate-snap"
+    },
+    "keybind-show-scale": {
+      "type": "keybind",
+      "name": "Toggle Scale Control",
+      "description": "Toggle the object scaling controls",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/show-scale"
+    },
+    "keybind-show-scale-xy": {
+      "type": "keybind",
+      "name": "Toggle Scale X/Y Control",
+      "description": "Toggle the object scaling by X/Y controls",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/show-scale-xy"
+    },
+    "keybind-save-level": {
+      "type": "keybind",
+      "name": "Save Level",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/save-level"
+    },
+    "keybind-pause-resume-playtest": {
+      "type": "keybind",
+      "name": "Pause/Resume Playtest",
+      "description": "Pauses or resumes the current playtest. Does not start playtesting",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/pause-resume-playtest"
+    },
+    "keybind-build-helper": {
+      "type": "keybind",
+      "name": "Build Helper",
+      "description": "Executes the <cy>Build Helper</c> feature, aka remaps Group and Color IDs of the selected objects to unused ones",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/build-helper"
+    },
+    "keybind-create-loop": {
+      "type": "keybind",
+      "name": "Create loop",
+      "description": "Executes the <cy>Create Loop</c> feature, aka makes a Spawn Trigger loop",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/create-loop"
+    },
+    "keybind-align-x": {
+      "type": "keybind",
+      "name": "Align X",
+      "description": "Executes the <cy>Align X</c> feature, aka aligns all of the selected objects along the X axis",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/align-x"
+    },
+    "keybind-align-y": {
+      "type": "keybind",
+      "name": "Align Y",
+      "description": "Executes the <cy>Align Y</c> feature, aka aligns all of the selected objects along the Y axis",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/align-y"
+    },
+    "keybind-toggle-link-controls": {
+      "type": "keybind",
+      "name": "Toggle Link Controls",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/toggle-link-controls"
+    },
+    "keybind-open-edit-object": {
+      "type": "keybind",
+      "name": "Edit Object",
+      "description": "Open the <cb>Edit Object</c> popup for the selected objects",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/open-edit-object"
+    },
+    "keybind-open-edit-group": {
+      "type": "keybind",
+      "name": "Edit Group",
+      "description": "Open the <co>Edit Group</c> popup for the selected objects",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/open-edit-group"
+    },
+    "keybind-open-edit-special": {
+      "type": "keybind",
+      "name": "Edit Special",
+      "description": "Open the <cj>Edit Special</c> popup for the selected objects",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/open-edit-special"
+    },
+    "keybind-copy-values": {
+      "type": "keybind",
+      "name": "Copy Values",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/copy-values"
+    },
+    "keybind-paste-state": {
+      "type": "keybind",
+      "name": "Paste State",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/paste-state"
+    },
+    "keybind-paste-color": {
+      "type": "keybind",
+      "name": "Paste Color",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/paste-color"
+    },
+    "keybind-enlarge-grid-size": {
+      "type": "keybind",
+      "name": "Increase Grid Size",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/enlarge-grid-size"
+    },
+    "keybind-ensmallen-grid-size": {
+      "type": "keybind",
+      "name": "Decrease Grid Size",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/ensmallen-grid-size"
+    },
+    "keybind-select-all": {
+      "type": "keybind",
+      "name": "Select All",
+      "description": "Select All Object(s)",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/select-all"
+    },
+    "keybind-select-all-left": {
+      "type": "keybind",
+      "name": "Select All Left",
+      "description": "Select All Object(s) Left of the Screen",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/select-all-left"
+    },
+    "keybind-select-all-right": {
+      "type": "keybind",
+      "name": "Select All Right",
+      "description": "Select All Object(s) Right of the Screen",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/select-all-right"
+    },
+    "keybind-show-ui": {
+      "type": "keybind",
+      "name": "Show UI",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/show-ui"
+    },
+    "keybind-hide-ui": {
+      "type": "keybind",
+      "name": "Hide UI",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/hide-ui"
+    },
+    "keybind-group-summary": {
+      "type": "keybind",
+      "name": "Open Group Summary",
+      "description": "Opens up <co>Group Summary</c>, aka a list showing which groups are in use",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/group-summary"
+    },
+    "keybind-move-obj-half-left": {
+      "type": "keybind",
+      "name": "Move Object Half Left",
+      "description": "Move Selected Object(s) half of a Block left (15 Units)",
+      "category": "editor",
+      "default": [
+        "Ctrl+Alt+A"
+      ],
+      "migrate-from": "hjfod.betteredit/move-obj-half-left"
+    },
+    "keybind-move-obj-half-right": {
+      "type": "keybind",
+      "name": "Move Object Half Right",
+      "description": "Move Selected Object(s) half of a Block right (15 Units)",
+      "category": "editor",
+      "default": [
+        "Ctrl+Alt+D"
+      ],
+      "migrate-from": "hjfod.betteredit/move-obj-half-right"
+    },
+    "keybind-move-obj-half-up": {
+      "type": "keybind",
+      "name": "Move Object Half Up",
+      "description": "Move Selected Object(s) half of a Block up (15 Units)",
+      "category": "editor",
+      "default": [
+        "Ctrl+Alt+W"
+      ],
+      "migrate-from": "hjfod.betteredit/move-obj-half-up"
+    },
+    "keybind-move-obj-half-down": {
+      "type": "keybind",
+      "name": "Move Object Half Down",
+      "description": "Move Selected Object(s) half of a Block down (15 Units)",
+      "category": "editor",
+      "default": [
+        "Ctrl+Alt+S"
+      ],
+      "migrate-from": "hjfod.betteredit/move-obj-half-down"
+    },
+    "keybind-move-obj-quarter-left": {
+      "type": "keybind",
+      "name": "Move Object Quarter Left",
+      "description": "Move Selected Object(s) quarter of a Block left (7.5 Units)",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/move-obj-quarter-left"
+    },
+    "keybind-move-obj-quarter-right": {
+      "type": "keybind",
+      "name": "Move Object Quarter Right",
+      "description": "Move Selected Object(s) quarter of a Block right (7.5 Units)",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/move-obj-quarter-right"
+    },
+    "keybind-move-obj-quarter-up": {
+      "type": "keybind",
+      "name": "Move Object Quarter Up",
+      "description": "Move Selected Object(s) quarter of a Block up (7.5 Units)",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/move-obj-quarter-up"
+    },
+    "keybind-move-obj-quarter-down": {
+      "type": "keybind",
+      "name": "Move Object Quarter Down",
+      "description": "Move Selected Object(s) quarter of a Block down (7.5 Units)",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/move-obj-quarter-down"
+    },
+    "keybind-move-obj-eighth-left": {
+      "type": "keybind",
+      "name": "Move Object Eighth Left",
+      "description": "Move Selected Object(s) eighth of a Block left (3.75 Units)",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/move-obj-eighth-left"
+    },
+    "keybind-move-obj-eighth-right": {
+      "type": "keybind",
+      "name": "Move Object Eighth Right",
+      "description": "Move Selected Object(s) eighth of a Block right (3.75 Units)",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/move-obj-eighth-right"
+    },
+    "keybind-move-obj-eighth-up": {
+      "type": "keybind",
+      "name": "Move Object Eighth Up",
+      "description": "Move Selected Object(s) eighth of a Block up (3.75 Units)",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/move-obj-eighth-up"
+    },
+    "keybind-move-obj-eighth-down": {
+      "type": "keybind",
+      "name": "Move Object Eighth Down",
+      "description": "Move Selected Object(s) eighth of a Block down (3.75 Units)",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/move-obj-eighth-down"
+    },
+    "keybind-move-obj-big-left": {
+      "type": "keybind",
+      "name": "Move Object Big Left",
+      "description": "Move Selected Object(s) 5 Blocks left (150 Units)",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/move-obj-big-left"
+    },
+    "keybind-move-obj-big-right": {
+      "type": "keybind",
+      "name": "Move Object Big Right",
+      "description": "Move Selected Object(s) 5 Blocks right (150 Units)",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/move-obj-big-right"
+    },
+    "keybind-move-obj-big-up": {
+      "type": "keybind",
+      "name": "Move Object Big Up",
+      "description": "Move Selected Object(s) 5 Blocks up (150 Units)",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/move-obj-big-up"
+    },
+    "keybind-move-obj-big-down": {
+      "type": "keybind",
+      "name": "Move Object Big Down",
+      "description": "Move Selected Object(s) 5 Blocks down (150 Units)",
+      "category": "editor",
+      "default": [],
+      "migrate-from": "hjfod.betteredit/move-obj-big-down"
+    }
+  },
+  "tags": [
+    "editor",
+    "enhancement",
+    "utility",
+    "customization"
+  ]
 }
