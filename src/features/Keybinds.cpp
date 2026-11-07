@@ -10,6 +10,7 @@
 #include <utils/HolyUB.hpp>
 #include "GridScaling.hpp"
 #include <features/GroupSummaryPopup.hpp>
+#include <features/ObjectFinderPopup.hpp>
 
 using namespace geode::prelude;
 
@@ -196,6 +197,9 @@ struct $modify(EditorUI) {
 
         this->defineKeybind("keybind-group-summary", [this] {
             GroupSummaryPopup::create(this)->show();
+        });
+        this->defineKeybind("keybind-object-finder", [this] {
+            ObjectFinderPopup::create(this)->show();
         });
 
         return true;
