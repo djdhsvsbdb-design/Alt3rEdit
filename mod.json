@@ -512,6 +512,14 @@
       "default": [],
       "migrate-from": "hjfod.betteredit/group-summary"
     },
+
+    "keybind-object-finder": {
+      "type": "keybind",
+      "name": "Object Finder",
+      "description": "Search for objects by Object ID or Group ID",
+      "category": "editor",
+      "default": []
+    },
     "keybind-move-obj-half-left": {
       "type": "keybind",
       "name": "Move Object Half Left",
