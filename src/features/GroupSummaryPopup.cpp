@@ -235,7 +235,7 @@ bool GroupSummaryPopup::init(EditorUI* ui) {
     m_viewMenu->setLayout(RowLayout::create());
     m_buttonMenu->addChildAtPosition(m_viewMenu, Anchor::TopLeft, ccp(50, -10), ccp(0, 1));
 
-    m_search = TextInput::create(m_groupsListContainer->getContentWidth() / .75f, "Search Groups");
+    m_search = TextInput::create(m_groupsListContainer->getContentWidth() / .75f, "Search Group / Trigger / Object ID");
     m_search->setCommonFilter(CommonFilter::Uint);
     m_search->setTextAlign(TextInputAlign::Left);
     m_search->setScale(.75f);
@@ -464,8 +464,31 @@ void GroupSummaryPopup::updatePages(size_t page) {
             case GroupSummaryFilter::NoTargets:  matches = !hasTargets && hasTriggers; break;
             case GroupSummaryFilter::NoTriggers: matches = hasTargets && !hasTriggers; break;
         }
-        if (m_search->getString().size() && !numToString(group).starts_with(m_search->getString())) {
-            matches = false;
+        // Search by group ID, trigger object ID, or target object ID.
+        // This keeps the Group Summary useful as a lightweight trigger/object finder.
+        auto const& query = m_search->getString();
+        if (!query.empty()) {
+            bool searchMatch = numToString(group).find(query) != std::string::npos;
+
+            if (!searchMatch && objs.triggers) {
+                for (auto trigger : CCArrayExt<EffectGameObject*>(objs.triggers)) {
+                    if (numToString(trigger->m_objectID).find(query) != std::string::npos) {
+                        searchMatch = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!searchMatch && objs.targets) {
+                for (auto target : CCArrayExt<GameObject*>(objs.targets)) {
+                    if (numToString(target->m_objectID).find(query) != std::string::npos) {
+                        searchMatch = true;
+                        break;
+                    }
+                }
+            }
+
+            matches = matches && searchMatch;
         }
         if (matches) {
             if (m_pages.pages.empty() || m_pages.pages.back().size() >= groupsPerPage) {
