@@ -385,17 +385,27 @@ class $modify(NewColorSelect, CustomizeObjectLayer) {
         if (!Mod::get()->template getSettingValue<bool>("new-color-menu")) {
             return;
         }
-        // add selected color to recent list if it's not there and it's not 0
-        if (
-            m_fields->modified && m_customColorChannel != 0 &&
-            !ranges::contains(RECENT_COLOR_IDS, m_customColorChannel)
-        ) {
-            std::rotate(
+        // Move the selected color to the front so the list reflects actual recency.
+        if (m_fields->modified && m_customColorChannel != 0) {
+            auto recent = std::find(
                 RECENT_COLOR_IDS.begin(),
-                std::prev(RECENT_COLOR_IDS.end()),
-                RECENT_COLOR_IDS.end()
+                RECENT_COLOR_IDS.end(),
+                m_customColorChannel
             );
-            *RECENT_COLOR_IDS.begin() = m_customColorChannel;
+
+            if (recent != RECENT_COLOR_IDS.begin()) {
+                if (recent != RECENT_COLOR_IDS.end()) {
+                    std::rotate(RECENT_COLOR_IDS.begin(), recent, std::next(recent));
+                }
+                else {
+                    std::rotate(
+                        RECENT_COLOR_IDS.begin(),
+                        std::prev(RECENT_COLOR_IDS.end()),
+                        RECENT_COLOR_IDS.end()
+                    );
+                    RECENT_COLOR_IDS.front() = m_customColorChannel;
+                }
+            }
         }
     }
 
