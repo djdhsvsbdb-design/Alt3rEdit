@@ -1,7 +1,7 @@
-# <span style="display: flex; align-items: center; gap: .25em"><img src="logo.png" width="50"> BetterEdit</span>
+# <span style="display: flex; align-items: center; gap: .25em"><img src="logo.png" width="50"> Alt3rEdit</span>
 
 > [!WARNING]
-> **BetterEdit is no longer being developed!** I have [retired from GD modding](https://hjfod.github.io/blog/so-long-and-thanks-for-all-the-fish.html). I'd recommend using alternatives like [Tinker](https://geode-sdk.org/mods/alphalaneous.tinker) instead. Thank you for the years of love and support <3
+> **Alt3rEdit is a community-maintained fork of BetterEdit.** The original upstream project is no longer being developed. Alt3rEdit retains the upstream LGPLv3 license and credits its original contributors.
 
 <span>
   <a href="LICENSE"><img alt="License Badge" src="https://img.shields.io/github/license/HJfod/BetterEdit?label=license&style=flat-square" /></a>
@@ -17,7 +17,7 @@
 
 <br>
 
-A mod that makes the <a href="https://store.steampowered.com/app/322170/Geometry_Dash/">Geometry Dash</a> editor, well, <i>better</i>.
+A community-maintained mod that improves the <a href="https://store.steampowered.com/app/322170/Geometry_Dash/">Geometry Dash</a> editor.
 
 ## :rocket: Installation
 
