@@ -17,6 +17,9 @@ class $modify(ScrollBackLayer, EditorPauseLayer) {
             return false;
 
         auto menu = this->getChildByID("small-actions-menu");
+        if (!menu) {
+            return true;
+        }
         
         auto resetScrollSpr = ButtonSprite::create(
             "Reset\nScroll", 30, 0, .4f, true,
