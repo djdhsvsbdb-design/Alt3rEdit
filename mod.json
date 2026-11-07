@@ -467,6 +467,13 @@
       "default": [],
       "migrate-from": "hjfod.betteredit/select-all"
     },
+    "keybind-select-same-type": {
+      "type": "keybind",
+      "name": "Select Same Type",
+      "description": "Select all objects with the same type as the selected object",
+      "category": "editor",
+      "default": []
+    },
     "keybind-select-all-left": {
       "type": "keybind",
       "name": "Select All Left",
