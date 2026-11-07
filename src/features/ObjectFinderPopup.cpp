@@ -1,4 +1,6 @@
 #include "ObjectFinderPopup.hpp"
+#include <algorithm>
+#include <charconv>
 #include <Geode/binding/LevelEditorLayer.hpp>
 #include <Geode/binding/GameObject.hpp>
 #include <Geode/binding/ButtonSprite.hpp>
@@ -39,7 +41,17 @@ void ObjectFinderPopup::updateResults(std::string const& query) {
     auto results = CCArray::create();
 
     if (!query.empty()) {
-        const int searchID = std::stoi(query);
+        int searchID = 0;
+        const auto [end, error] = std::from_chars(
+            query.data(), query.data() + query.size(), searchID
+        );
+        if (error != std::errc{} || end != query.data() + query.size()) {
+            m_results = results;
+            m_selectButton->setEnabled(false);
+            m_resultsLabel->setString("Invalid ID");
+            return;
+        }
+
         auto allObjects = m_ui->m_editorLayer->getAllObjects();
 
         if (allObjects) {
@@ -73,7 +85,7 @@ void ObjectFinderPopup::updateResults(std::string const& query) {
         m_resultsLabel->setString("Enter an Object ID or Group ID");
     }
     else {
-        auto label = fmt::format("{} object(s) found", results->count());
+        auto label = std::to_string(results->count()) + " object(s) found";
         m_resultsLabel->setString(label.c_str());
     }
 }
