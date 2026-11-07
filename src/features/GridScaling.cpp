@@ -63,7 +63,11 @@ class $modify(GridUI, EditorUI) {
         input->setCommonFilter(CommonFilter::Float);
         input->setCallback([this](std::string const& num) {
             if (auto value = numFromString<float>(num)) {
-                this->updateGridConstSize(value.unwrap(), false);
+                auto gridSize = value.unwrap();
+                // Ignore out-of-range input instead of unexpectedly resetting the grid.
+                if (gridSize >= .9f && gridSize <= 120.1f) {
+                    this->updateGridConstSize(gridSize, false);
+                }
             }
         });
         input->setScale(.55f);
