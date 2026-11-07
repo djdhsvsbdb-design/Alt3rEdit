@@ -119,6 +119,25 @@ struct $modify(EditorUI) {
         this->defineKeybind("keybind-select-all", [this]() {
             fakeEditorPauseLayer(m_editorLayer)->onSelectAll(nullptr);
         });
+        this->defineKeybind("keybind-select-same-type", [this]() {
+            auto selected = be::getSelectedObjects(this);
+            if (selected.empty() || !selected.front()) {
+                return;
+            }
+
+            const int objectID = selected.front()->m_objectID;
+            auto matchingObjects = CCArray::create();
+            for (auto object : CCArrayExt<GameObject*>(m_editorLayer->getAllObjects())) {
+                if (object && object->m_objectID == objectID) {
+                    matchingObjects->addObject(object);
+                }
+            }
+
+            if (matchingObjects->count() > 0) {
+                this->selectObjects(matchingObjects, true);
+                this->updateButtons();
+            }
+        });
         this->defineKeybind("keybind-select-all-left", [this]() {
             fakeEditorPauseLayer(m_editorLayer)->onSelectAllLeft(nullptr);
         });
