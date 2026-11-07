@@ -70,13 +70,16 @@ bool ObjectsListPopup::init(std::string const& title, GroupSummaryPopup* popup, 
         }
         m_mainLayer->addChildAtPosition(bg, Anchor::Center);
         
-        auto selectSpr = ButtonSprite::create("Select Objects", "goldFont.fnt", "GJ_button_01.png", .8f);
-        selectSpr->setScale(.7f);
-        auto selectBtn = CCMenuItemSpriteExtra::create(
-            selectSpr, this, menu_selector(ObjectsListPopup::onSelect)
-        );
-        m_buttonMenu->addChildAtPosition(selectBtn, Anchor::Bottom, ccp(0, 20));
     }
+
+    // Allow selecting both group targets and the triggers that reference a group.
+    auto selectSpr = ButtonSprite::create("Select Objects", "goldFont.fnt", "GJ_button_01.png", .8f);
+    selectSpr->setScale(.7f);
+    auto selectBtn = CCMenuItemSpriteExtra::create(
+        selectSpr, this, menu_selector(ObjectsListPopup::onSelect)
+    );
+    selectBtn->setEnabled(objs && objs->count() > 0);
+    m_buttonMenu->addChildAtPosition(selectBtn, Anchor::Bottom, ccp(0, 20));
 
     return true;
 }
