@@ -11,6 +11,7 @@
 #include "GridScaling.hpp"
 #include <features/GroupSummaryPopup.hpp>
 #include <features/ObjectFinderPopup.hpp>
+#include <features/ObjectInspectorPopup.hpp>
 
 using namespace geode::prelude;
 
@@ -200,6 +201,9 @@ struct $modify(EditorUI) {
         });
         this->defineKeybind("keybind-object-finder", [this] {
             ObjectFinderPopup::create(this)->show();
+        });
+        this->defineKeybind("keybind-object-inspector", [this] {
+            ObjectInspectorPopup::create(this)->show();
         });
 
         return true;
