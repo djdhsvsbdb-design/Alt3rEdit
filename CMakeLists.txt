@@ -36,6 +36,16 @@ endif()
 
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode SYSTEM)
 
+# The iOS bindings unity translation unit uses FMOD C API types before any
+# generated include brings in their declarations. Force-include the SDK header
+# for the bindings target on iOS, where this otherwise fails to compile.
+if (IOS AND TARGET GeodeBindings)
+    target_compile_options(GeodeBindings PRIVATE
+        "-include"
+        "Geode/fmod/fmod.hpp"
+    )
+endif()
+
 setup_geode_mod(${PROJECT_NAME})
 # For server stuff we need some lib for RSA and rn we are using wolfSSL because 
 # dank_meme recommended it
