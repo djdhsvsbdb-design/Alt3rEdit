@@ -1,0 +1,683 @@
+#include <Geode/Geode.hpp>
+#include <Geode/modify/EditorUI.hpp>
+#include <Geode/utils/general.hpp>
+#include <Geode/ui/Notification.hpp>
+#include <Geode/utils/web.hpp>
+#include <algorithm>
+#include <cctype>
+#include <cstdlib>
+#include <string_view>
+
+using namespace geode;
+using namespace cocos2d;
+using geode::cocos::CCArrayExt;
+
+#include "formula-tool/interpreter.cpp"
+#include "formula-tool/config.cpp"
+
+class FunctionToolPopup : public geode::Popup {
+public:
+    TextInput* m_input_x;
+    TextInput* m_input_y;
+    TextInput* m_input_rotation;
+
+    TextInput* m_input_n;
+    TextInput* m_input_start;
+    TextInput* m_input_end;
+
+    bool m_abs_scaling;
+    bool m_abs_rotation;
+    bool m_use_robtop_units;
+    bool m_use_radians;
+    bool m_delete_original;
+
+    std::string m_scale_x;
+    std::string m_scale_y;
+
+    std::string m_base_hue;
+    std::string m_base_saturation;
+    std::string m_base_value;
+    std::string m_detail_hue;
+    std::string m_detail_saturation;
+    std::string m_detail_value;
+
+    static std::optional<ToolConfig> pinnedConfig;
+    CCMenuItemSpriteExtra* m_pinToggler;
+
+    #include "formula-tool/popups/settings.cpp"
+    #include "formula-tool/popups/scale.cpp"
+    #include "formula-tool/popups/hsv.cpp"
+    #include "formula-tool/popups/history.cpp"
+    #include "formula-tool/popups/add.cpp"
+
+
+	static auto* create() {
+		auto* node = new (std::nothrow) FunctionToolPopup();
+		if (node && node->init()) {
+			node->autorelease();
+		} else {
+			delete node;
+			node = nullptr;
+		}
+		return node;
+	}
+
+	bool init() {
+        if (!Popup::init(440, 180)) return false;
+
+        m_noElasticity = true;
+        this->setTitle("Function tool");
+
+        auto winSize = CCDirector::sharedDirector()->getWinSize();
+        auto center = winSize / 2.f;
+
+        auto const center2 = CCSize(440, 180)/2;
+
+        auto applySprite = ButtonSprite::create("Apply", "bigFont.fnt", "GJ_button_01.png", .60f);
+        applySprite->setScale(0.85f);
+
+        auto applyBtn = CCMenuItemSpriteExtra::create(
+            applySprite,
+            this,
+            menu_selector(FunctionToolPopup::onApply)
+        );
+
+        auto settingsSprite = CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
+        settingsSprite->setScale(0.7f);
+
+        auto settingsBtn = CCMenuItemSpriteExtra::create(
+            settingsSprite,
+            this,
+            menu_selector(FunctionToolPopup::onSettings)
+        );
+        auto scaleBtn = CCMenuItemSpriteExtra::create(
+            EditorButtonSprite::createWithSpriteFrameName("edit_scaleXYBtn_001.png", .90f),
+            this,
+            menu_selector(FunctionToolPopup::onScale)
+        );
+        auto hsvBtn = CCMenuItemSpriteExtra::create(
+            CCSprite::createWithSpriteFrameName("GJ_hsvBtn_001.png"),
+            this,
+            menu_selector(FunctionToolPopup::onHsv)
+        );
+
+        auto historySprite = CCSprite::createWithSpriteFrameName("accountBtn_myLevels_001.png");
+        historySprite->setScale(0.75f);
+
+        auto historyBtn = CCMenuItemSpriteExtra::create(
+            historySprite,
+            this,
+            menu_selector(FunctionToolPopup::onHistory)
+        );
+
+        auto addSprite = CCSprite::createWithSpriteFrameName("GJ_plusBtn_001.png");
+        addSprite->setScale(0.5f);
+
+        auto addBtn = CCMenuItemSpriteExtra::create(
+            addSprite,
+            this,
+            menu_selector(FunctionToolPopup::onAdd)
+        );
+
+        auto pasteSprite = CCSprite::createWithSpriteFrameName("GJ_pasteBtn_001.png");
+        pasteSprite->setScale(0.6f);
+
+        auto pasteBtn = CCMenuItemSpriteExtra::create(
+            pasteSprite,
+            this,
+            menu_selector(FunctionToolPopup::onPaste)
+        );
+        
+        auto bubbleSprite = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
+        bubbleSprite->setScale(0.5f);
+
+        auto bubbleBtn = CCMenuItemSpriteExtra::create(
+            bubbleSprite,
+            this,
+            menu_selector(FunctionToolPopup::onBubble)
+        );
+
+        auto unlockedSprite = CCSprite::createWithSpriteFrameName("GJ_lock_open_001.png");
+        auto lockedSprite = CCSprite::createWithSpriteFrameName("GJ_lock_001.png");
+        
+        this->m_pinToggler = CCMenuItemSpriteExtra::create(
+            CCSprite::createWithSpriteFrameName("GJ_lock_001.png"), this, menu_selector(FunctionToolPopup::onPin)
+        );
+
+        this->setLockSprite();
+
+        applyBtn->setPosition(center2 + ccp(110, -63));
+        settingsBtn->setPosition(center2 + ccp(-180, -63));
+        scaleBtn->setPosition(center2 + ccp(-110, -63));
+        hsvBtn->setPosition(center2 + ccp(-40, -63));
+        historyBtn->setPosition(center2 + ccp(195, 65));
+        addBtn->setPosition(center2 + ccp(125, 65));
+        pasteBtn->setPosition(center2 + ccp(160, 65));
+        bubbleBtn->setPosition(center2 + ccp(-77, 68));
+        this->m_pinToggler->setPosition(center2 + ccp(203, -70));
+
+        m_buttonMenu->addChild(applyBtn);
+        m_buttonMenu->addChild(settingsBtn);
+        m_buttonMenu->addChild(scaleBtn);
+        m_buttonMenu->addChild(hsvBtn);
+        m_buttonMenu->addChild(historyBtn);
+        m_buttonMenu->addChild(addBtn);
+        m_buttonMenu->addChild(pasteBtn);
+        m_buttonMenu->addChild(bubbleBtn);
+        m_buttonMenu->addChild(this->m_pinToggler);
+
+        int input_width = 200;
+
+        m_input_x = TextInput::create(input_width, "0.0", "chatFont.fnt");
+        m_input_x->setLabel("Position x(t) =");
+        m_input_x->setPosition(center + ccp(-110, 25));
+        m_input_x->setCommonFilter(CommonFilter::Any);
+        this->addChild(m_input_x);
+
+        m_input_y = TextInput::create(input_width, "0.0", "chatFont.fnt");
+        m_input_y->setLabel("Position y(t) =");
+        m_input_y->setPosition(center + ccp(110, 25));
+        m_input_y->setCommonFilter(CommonFilter::Any);
+        this->addChild(m_input_y);
+
+        m_input_rotation = TextInput::create(input_width, "0.0", "chatFont.fnt");
+        m_input_rotation->setLabel("Rotation(t) =");
+        m_input_rotation->setPosition(center + ccp(-110, -25));
+        m_input_rotation->setCommonFilter(CommonFilter::Any);
+        this->addChild(m_input_rotation);
+
+        m_input_n = TextInput::create(60, "", "chatFont.fnt");
+        m_input_n->setLabel("Amount: ");
+        m_input_n->setString("20", false);
+        m_input_n->setPosition(center + ccp(40, -25));
+        m_input_n->setCommonFilter(CommonFilter::Uint);
+        this->addChild(m_input_n);
+
+        m_input_start = TextInput::create(60, "", "chatFont.fnt");
+        m_input_start->setLabel("Start t: ");
+        m_input_start->setString("0.0", false);
+        m_input_start->setPosition(center + ccp(110, -25));
+        m_input_start->setCommonFilter(CommonFilter::Float);
+        this->addChild(m_input_start);
+
+        m_input_end = TextInput::create(60, "", "chatFont.fnt");
+        m_input_end->setLabel("End t: ");
+        m_input_end->setString("5.0", false);
+        m_input_end->setPosition(center + ccp(180, -25));
+        m_input_end->setCommonFilter(CommonFilter::Float);
+        this->addChild(m_input_end);
+
+        bool locked = Mod::get()->getSavedValue<bool>("keepConfigOnClose", false);
+
+        if (locked && FunctionToolPopup::pinnedConfig.has_value()) {
+            this->loadConfig(FunctionToolPopup::pinnedConfig.value());
+        }
+
+		return true;
+	}
+
+	void onApply(CCObject*) {
+		auto* editor = GameManager::sharedState()->getEditorLayer()->m_editorUI;
+		auto objs = editor->getSelectedObjects();
+		if (objs && objs->count()) {
+			this->perform();
+		}
+	}
+
+    void onHsv(CCObject*) {
+        auto sub = HsvPopup::create();
+        sub->m_functool = this;
+        
+        sub->m_input_base_hue->setString(this->m_base_hue, false);
+        sub->m_input_base_saturation->setString(this->m_base_saturation, false);
+        sub->m_input_base_value->setString(this->m_base_value, false);
+
+        sub->m_input_detail_hue->setString(this->m_detail_hue, false);
+        sub->m_input_detail_saturation->setString(this->m_detail_saturation, false);
+        sub->m_input_detail_value->setString(this->m_detail_value, false);
+
+        sub->show();
+    }
+
+    void onScale(CCObject*) {
+        auto sub = ScalePopup::create();
+        sub->m_functool = this;
+
+        sub->m_input_scale_x->setString(this->m_scale_x, false);
+        sub->m_input_scale_y->setString(this->m_scale_y, false);
+
+        sub->show();
+    }
+
+    void onSettings(CCObject*) {
+        auto sub = SettingsPopup::create();
+        sub->m_functool = this;
+
+        sub->m_inputs[0]->toggle(m_abs_scaling);
+        sub->m_inputs[1]->toggle(m_abs_rotation);
+        sub->m_inputs[2]->toggle(m_use_robtop_units);
+        sub->m_inputs[3]->toggle(m_use_radians);
+        sub->m_inputs[4]->toggle(m_delete_original);
+
+        sub->show();
+    }
+
+    void onHistory(CCObject*) {
+        auto sub = HistoryPopup::create(this);
+        sub->show();
+    }
+
+    void onAdd(CCObject*) {
+        auto sub = AddPopup::create();
+        sub->m_functool = this;
+
+        sub->show();
+    }
+
+    void onPaste(CCObject*) {
+        auto value_result = matjson::parse(utils::clipboard::read());
+
+        if (value_result) {
+            auto value = value_result.unwrap();
+            auto preset_result = value.as<ToolConfig>();
+
+            if (preset_result) {
+                auto preset = preset_result.unwrap();
+                this->loadConfig(preset);
+
+                Notification::create(
+                    "Pasted preset string from keyboard",
+                    NotificationIcon::Success
+                )->show();
+
+                return;
+            }
+        }
+
+        Notification::create(
+            "Pasted string is not a valid preset string",
+            NotificationIcon::Error
+        )->show();
+
+    }
+
+    void onBubble(CCObject*) {
+        geode::createQuickPopup(
+            "Guide",
+            "Do you want to open the Functional guide?",
+            "No", "Yes",
+            [](auto, bool yes) {
+                if (yes) {
+                    utils::web::openLinkInBrowser("https://github.com/anatom3000/Functional/blob/dev/guide.md");
+                    Notification::create(
+                        "Opening guide, check your browser...",
+                        NotificationIcon::Info
+                    )->show();
+                }
+            }
+        );
+    }
+
+    void setLockSprite() {
+        bool locked = Mod::get()->getSavedValue<bool>("keepConfigOnClose", false);
+
+        const char* sprite = locked ? "GJ_lock_001.png" : "GJ_lock_open_001.png";
+
+        auto spr = CCSprite::createWithSpriteFrameName(sprite);
+        spr->setScale(locked ? .68f : .7f);
+        spr->setPosition(this->m_pinToggler->getNormalImage()->getPosition());
+
+        this->m_pinToggler->setNormalImage(spr);
+        spr->setAnchorPoint(locked ? ccp(.47f, .48f) : ccp(.5f, .2f));
+    }
+
+    void onPin(CCObject*) {
+        bool locked = Mod::get()->getSavedValue<bool>("keepConfigOnClose", false);
+        Mod::get()->setSavedValue<bool>("keepConfigOnClose", !locked);
+
+        log::info("{}", !locked);
+
+        this->setLockSprite();
+    }
+
+    CCArray* copyObjects(CCArray* objects) {
+        // hack to copy objects using the in-game copy+paste
+
+		auto* editor = GameManager::sharedState()->getEditorLayer();
+		EditorUI* ui = editor->m_editorUI;
+
+        auto selected = ui->getSelectedObjects()->shallowCopy();
+
+        ui->deselectAll();
+        ui->selectObjects(objects, false);
+
+        ui->onDuplicate(nullptr);
+
+        auto copied = ui->getSelectedObjects()->shallowCopy();
+        ui->deselectAll();
+        ui->selectObjects(selected, false);
+
+        editor->m_undoObjects->removeLastObject();
+
+        return copied;
+    }
+
+    std::optional<Expr> parse_input(std::string input, const char* field, Expr if_empty) {
+        auto tokens_result = tokenize(input);
+
+        if (tokens_result.index() != 0) {
+            auto index = std::get<1>(tokens_result);
+
+            FLAlertLayer::create(
+                "Error",
+                fmt::format("{}: unrecognized character '{}' at position {}", field, input[index], index+1),
+                "OK"
+            )->show();
+
+            return std::nullopt;
+        }
+
+        auto tokens = std::get<std::vector<Token>>(tokens_result);
+
+        if (tokens.size() == 0) {
+            return if_empty;
+        }
+
+        auto expr_result = parse_expression(tokens);
+
+        if (expr_result.index() != 0) {
+            auto message = std::get<1>(expr_result);
+
+            FLAlertLayer::create(
+                "Error while parsing",
+                fmt::format("{}: {}", field, message),
+                "OK"
+            )->show();
+
+            return std::nullopt;
+        }
+
+        return std::get<0>(std::move(expr_result));
+    }
+
+    CCPoint centerOf(CCArray* objects) {
+        auto first_pos = static_cast<GameObject*>(objects->objectAtIndex(0))->getRealPosition();
+
+        float x_min = first_pos.x;
+        float x_max = first_pos.x;
+        float y_min = first_pos.y;
+        float y_max = first_pos.y;
+        for (int i = 1; i < objects->count(); i++) {
+            auto pos = static_cast<GameObject*>(objects->objectAtIndex(i))->getRealPosition();
+            x_min = std::min(x_min, pos.x);
+            x_max = std::max(x_max, pos.x);
+            y_min = std::min(y_min, pos.y);
+            y_max = std::max(y_max, pos.y);
+        }
+
+        return ccp((x_min+x_max)/2.f, (y_min+y_max)/2.f);
+    }
+
+    void scaleRelative(GameObject* obj, CCPoint relative, float scale_x, float scale_y) {
+		auto* editor = GameManager::sharedState()->getEditorLayer();
+		EditorUI* ui = editor->m_editorUI;
+
+        auto pos = obj->getRealPosition();
+        ui->moveObject(obj, -pos);
+
+        pos -= relative;
+        pos.x *= scale_x;
+        pos.y *= scale_y;
+        pos += relative;
+        
+        ui->moveObject(obj, pos);
+    }
+
+	void perform() {
+        #define parse_field(out, input, field_name, default)\
+            Expr out;\
+            {\
+                auto expr_result = this->parse_input(input, field_name, default);\
+                if (expr_result.has_value()) {\
+                    out = std::move(expr_result.value());\
+                } else {\
+                    return;\
+                }\
+            }
+
+        #define zero { .kind = ExprKind::Literal, .value = 0.0 }
+        #define one  { .kind = ExprKind::Literal, .value = 1.0 }
+
+        parse_field(x_expr,                 m_input_x->getString(),         "position x(t)",        zero);
+        parse_field(y_expr,                 m_input_y->getString(),         "position x(t)",        zero);
+        parse_field(scale_x_expr,           m_scale_x,                      "scale x(t)",           one );
+        parse_field(scale_y_expr,           m_scale_y,                      "scale y(t)",           one );
+        parse_field(rotation_expr,          m_input_rotation->getString(),  "rotation(t)",          zero);
+        parse_field(base_hue_expr,          m_base_hue,                     "base hue(t)",          zero);
+        parse_field(base_saturation_expr,   m_base_saturation,              "base saturation(t)",   zero);
+        parse_field(base_value_expr,        m_base_value,                   "base value(t)",        zero);
+        parse_field(detail_hue_expr,        m_detail_hue,                   "detail hue(t)",        zero);
+        parse_field(detail_saturation_expr, m_detail_saturation,            "detail saturation(t)", zero);
+        parse_field(detail_value_expr,      m_detail_value,                 "detail value(t)",      zero);
+
+        std::string steps_str = m_input_n->getString();
+        steps_str.erase(std::remove_if(steps_str.begin(), steps_str.end(), isspace), steps_str.end());
+
+        if (steps_str.empty()) {
+            FLAlertLayer::create("Error", "Amount field is empty.", "OK")->show();
+            return;
+        }
+
+        std::string start_str = m_input_start->getString();
+        start_str.erase(std::remove_if(start_str.begin(), start_str.end(), isspace), start_str.end());
+        if (start_str.empty()) {
+            FLAlertLayer::create("Error", "Start t field is empty.", "OK")->show();
+            return;
+        }
+
+        std::string end_str = m_input_end->getString();
+        end_str.erase(std::remove_if(end_str.begin(), end_str.end(), isspace), end_str.end());
+        if (end_str.empty()) {
+            FLAlertLayer::create("Error", "End t field is empty.", "OK")->show();
+            return;
+        }
+
+        int steps = 0;
+        float start = 0.f;
+        float end = 0.f;
+        try {
+            size_t parsed = 0;
+            steps = std::stoi(steps_str, &parsed);
+            if (parsed != steps_str.size()) throw std::invalid_argument("invalid amount");
+            start = std::stof(start_str, &parsed);
+            if (parsed != start_str.size()) throw std::invalid_argument("invalid start");
+            end = std::stof(end_str, &parsed);
+            if (parsed != end_str.size()) throw std::invalid_argument("invalid end");
+        } catch (std::exception const&) {
+            FLAlertLayer::create("Error", "Amount and t range must contain valid numbers.", "OK")->show();
+            return;
+        }
+        if (steps < 1 || steps > 500) {
+            FLAlertLayer::create("Error", "Amount must be between 1 and 500 copies.", "OK")->show();
+            return;
+        }
+        if (!std::isfinite(start) || !std::isfinite(end)) {
+            FLAlertLayer::create("Error", "Start and end values must be finite numbers.", "OK")->show();
+            return;
+        }
+
+		auto* editor = GameManager::sharedState()->getEditorLayer();
+		EditorUI* ui = editor->m_editorUI;
+		auto* objs = CCArray::create();
+
+        auto selected = ui->getSelectedObjects()->shallowCopy();
+        auto center = this->centerOf(selected);
+        // persistent singleton to reduce allocations
+        auto obj_single = CCArray::createWithCapacity(1);
+
+		for (float i = 0; i < steps; i++) {
+            float t = start + (end - start) * (float)i/(float)steps;
+
+            InterpreterConfig c = {
+                .t = t,
+                .use_radians = m_use_radians,
+            };
+            
+            float factor = m_use_robtop_units ? 1.0 : 30.0;
+            CCPoint pos = ccp(factor * x_expr.interpret(c), factor * y_expr.interpret(c));
+            float rotation = rotation_expr.interpret(c);
+            float scale_x = scale_x_expr.interpret(c);
+            float scale_y = scale_y_expr.interpret(c);
+            float base_hue = base_hue_expr.interpret(c);
+            float base_saturation = base_saturation_expr.interpret(c);
+            float base_value = base_value_expr.interpret(c);
+            float detail_hue = detail_hue_expr.interpret(c);
+            float detail_saturation = detail_saturation_expr.interpret(c);
+            float detail_value = detail_value_expr.interpret(c);
+            
+            bool ok = true;
+            for (auto val : {pos.x, pos.y, rotation, scale_x, scale_y, base_hue, base_saturation, base_value, detail_hue, detail_saturation, detail_value}) {
+                if (std::isnan(val) || std::isinf(val)) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (!ok) continue;
+            
+            auto current = copyObjects(selected);
+            auto current_center = center+pos;
+
+            for (int j = 0; j < current->count(); j++) {
+                GameObject* obj = static_cast<GameObject*>(current->objectAtIndex(j));
+                
+                ui->moveObject(obj, ccp(pos.x, pos.y));
+                
+                auto base_scale_x = obj->getRScaleX();
+                auto base_scale_y = obj->getRScaleY();
+                obj->updateCustomScaleX(base_scale_x*scale_x);
+                obj->updateCustomScaleY(base_scale_y*scale_y);
+                if (!m_abs_scaling) this->scaleRelative(obj, current_center, scale_x, scale_y);
+
+                if (m_abs_rotation) {
+                    obj_single->addObject(obj);
+                    ui->rotateObjects(obj_single, rotation, obj->getRealPosition());
+                    obj_single->removeLastObject(false);
+                }
+
+                if (obj->m_baseColor) {
+                    obj->m_baseColor->m_hsv.h += base_hue;
+                    obj->m_baseColor->m_hsv.s += base_saturation;
+                    obj->m_baseColor->m_hsv.v += base_value;
+                }
+
+                if (obj->m_detailColor) {
+                    obj->m_detailColor->m_hsv.h += detail_hue;
+                    obj->m_detailColor->m_hsv.s += detail_saturation;
+                    obj->m_detailColor->m_hsv.v += detail_value;
+                }
+            }
+            
+            if (!m_abs_rotation) ui->rotateObjects(current, rotation, current_center);
+
+			objs->addObjectsFromArray(current);
+		}
+
+		editor->m_undoObjects->addObject(UndoObject::createWithArray(objs, UndoCommand::Paste));
+
+        if (m_delete_original) ui->onDeleteSelected(nullptr);
+
+        ui->selectObjects(objs, /* ignoreSelectFilter: */ true);
+		this->keyBackClicked();
+	}
+
+    ToolConfig saveConfig(std::string name) {
+        return {
+            .name = name,
+
+            .x = m_input_x->getString(),
+            .y = m_input_y->getString(),
+            .rotation = m_input_rotation->getString(),
+
+            .n = m_input_n->getString(),
+            .start = m_input_start->getString(),
+            .end = m_input_end->getString(),
+
+            .abs_scaling = m_abs_scaling,
+            .abs_rotation = m_abs_rotation,
+            .use_robtop_units = m_use_robtop_units,
+            .use_radians = m_use_radians,
+            .delete_original = m_delete_original,
+
+            .scale_x = m_scale_x,
+            .scale_y = m_scale_y,
+
+            .base_hue = m_base_hue,
+            .base_saturation = m_base_saturation,
+            .base_value = m_base_value,
+            .detail_hue = m_detail_hue,
+            .detail_saturation = m_detail_saturation,
+            .detail_value = m_detail_value
+        };
+    }
+
+    void loadConfig(ToolConfig c) {
+        m_input_x->setString(c.x, false);
+        m_input_y->setString(c.y, false);
+        m_input_rotation->setString(c.rotation, false);
+
+        m_input_n->setString(c.n, false);
+        m_input_start->setString(c.start, false);
+        m_input_end->setString(c.end, false);
+
+        m_abs_scaling = c.abs_scaling;
+        m_abs_rotation = c.abs_rotation;
+        m_use_robtop_units = c.use_robtop_units;
+        m_use_radians = c.use_radians;
+        m_delete_original = c.delete_original;
+
+        m_scale_x = c.scale_x;
+        m_scale_y = c.scale_y;
+
+        m_base_hue = c.base_hue;
+        m_base_saturation = c.base_saturation;
+        m_base_value = c.base_value;
+        m_detail_hue = c.detail_hue;
+        m_detail_saturation = c.detail_saturation;
+        m_detail_value = c.detail_value;
+    }
+
+    void onClose(CCObject* sender) {
+        (void)Mod::get()->saveData();
+        bool locked = Mod::get()->getSavedValue<bool>("keepConfigOnClose", false);
+        if (locked) {
+            FunctionToolPopup::pinnedConfig.emplace(this->saveConfig(""));
+        } else {
+            FunctionToolPopup::pinnedConfig.reset();
+        }
+
+        Popup::onClose(sender);
+    }
+};
+
+std::optional<ToolConfig> FunctionToolPopup::pinnedConfig = std::nullopt;
+
+class $modify(FuncToolEditorUI, EditorUI) {
+	void on_function_tool(CCObject*) {
+		if (this->getSelectedObjects()->count()) {
+			FunctionToolPopup::create()->show();
+		} else {
+			FLAlertLayer::create("Info", "You must select some objects to use the function tool.", "OK")->show();
+		}
+	}
+
+	void createMoveMenu() {
+		EditorUI::createMoveMenu();
+		auto buttonSprite = ButtonSprite::create("f(x)", "goldFont.fnt", "GJ_button_01.png", .55f);
+		auto* btn = CCMenuItemSpriteExtra::create(buttonSprite, this, menu_selector(FuncToolEditorUI::on_function_tool));
+		m_editButtonBar->m_buttonArray->addObject(btn);
+		auto rows = GameManager::sharedState()->getIntGameVariable("0049");
+		auto cols = GameManager::sharedState()->getIntGameVariable("0050");
+		// TODO: replace with reloadItemsInNormalSize
+		m_editButtonBar->reloadItems(rows, cols);
+	}
+};
