@@ -512,7 +512,6 @@
       "default": [],
       "migrate-from": "hjfod.betteredit/group-summary"
     },
-
     "keybind-object-finder": {
       "type": "keybind",
       "name": "Object Finder",
@@ -655,6 +654,13 @@
       "category": "editor",
       "default": [],
       "migrate-from": "hjfod.betteredit/move-obj-big-down"
+    },
+    "keybind-object-inspector": {
+      "type": "keybind",
+      "name": "Object Inspector",
+      "description": "Show statistics for selected objects, object IDs, and groups",
+      "category": "editor",
+      "default": []
     }
   },
   "tags": [
