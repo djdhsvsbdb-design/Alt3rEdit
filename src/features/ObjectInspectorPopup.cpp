@@ -32,11 +32,13 @@ bool ObjectInspectorPopup::init(EditorUI* ui) {
         }
 
         objectIDs.insert(object->m_objectID);
-        if (object->m_baseColorID > 0) {
-            baseColorIDs.insert(object->m_baseColorID);
+        // In GD 2.2081, color channel IDs are stored on GJSpriteColor,
+        // not directly on GameObject.
+        if (object->m_baseColor && object->m_baseColor->m_colorID > 0) {
+            baseColorIDs.insert(object->m_baseColor->m_colorID);
         }
-        if (object->m_detailColorID > 0) {
-            detailColorIDs.insert(object->m_detailColorID);
+        if (object->m_detailColor && object->m_detailColor->m_colorID > 0) {
+            detailColorIDs.insert(object->m_detailColor->m_colorID);
         }
         if (object->m_groups) {
             const int count = std::clamp(static_cast<int>(object->m_groupCount), 0, 10);
