@@ -10,12 +10,15 @@ protected:
     EditorUI* m_ui;
     TextInput* m_search;
     CCLabelBMFont* m_resultsLabel;
+    CCLabelBMFont* m_modeLabel;
+    bool m_searchByGroup = false;
     CCMenuItemSpriteExtra* m_selectButton;
     Ref<CCArray> m_results;
 
     bool init(EditorUI* ui);
     void updateResults(std::string const& query);
     void onSelect(CCObject*);
+    void onSwitchMode(CCObject*);
 
 public:
     static ObjectFinderPopup* create(EditorUI* ui);
