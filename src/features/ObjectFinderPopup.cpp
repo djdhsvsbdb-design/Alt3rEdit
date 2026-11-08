@@ -40,6 +40,13 @@ bool ObjectFinderPopup::init(EditorUI* ui) {
 void ObjectFinderPopup::updateResults(std::string const& query) {
     auto results = CCArray::create();
 
+    if (!m_ui || !m_ui->m_editorLayer) {
+        m_results = results;
+        m_selectButton->setEnabled(false);
+        m_resultsLabel->setString("Editor unavailable");
+        return;
+    }
+
     if (!query.empty()) {
         int searchID = 0;
         const auto [end, error] = std::from_chars(
