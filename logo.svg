@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<defs>
+ <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#18002f"/><stop offset="1" stop-color="#080014"/></linearGradient>
+ <linearGradient id="violet" x2="1" y2="1"><stop stop-color="#f06bff"/><stop offset=".48" stop-color="#a900ff"/><stop offset="1" stop-color="#5100d8"/></linearGradient>
+ <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="18" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="1024" height="1024" rx="0" fill="url(#bg)"/>
+<rect x="34" y="34" width="956" height="956" rx="22" fill="none" stroke="#b500ff" stroke-width="18" filter="url(#glow)"/>
+<g opacity=".38" fill="#a000ff"><rect x="90" y="100" width="70" height="70"/><rect x="860" y="100" width="90" height="90"/><rect x="880" y="650" width="42" height="42"/><rect x="110" y="850" width="42" height="42"/></g>
+<g transform="translate(0,-30)" filter="url(#glow)">
+ <path d="M250 260 L290 195 355 210 405 155 465 190 520 145 585 190 650 175 690 240 765 250 760 325 820 370 780 435 805 500 735 540 725 615 650 620 605 680 535 645 470 690 420 635 345 650 330 575 260 545 285 475 230 420 275 360Z" fill="url(#violet)" stroke="#08000e" stroke-width="28" stroke-linejoin="round"/>
+ <rect x="260" y="235" width="500" height="430" rx="62" fill="url(#violet)" stroke="#08000e" stroke-width="30"/>
+ <path d="M350 395 Q420 450 485 400" fill="none" stroke="#090012" stroke-width="42" stroke-linecap="round"/>
+ <path d="M545 400 Q610 450 680 385" fill="none" stroke="#090012" stroke-width="42" stroke-linecap="round"/>
+ <path d="M430 555 Q510 620 590 555" fill="none" stroke="#fff" stroke-width="30" stroke-linecap="round"/>
+ <g transform="rotate(38 760 500)"><rect x="735" y="310" width="90" height="330" rx="14" fill="url(#violet)" stroke="#08000e" stroke-width="24"/><path d="M735 640 L780 720 825 640Z" fill="#f4dfff" stroke="#08000e" stroke-width="20"/><rect x="735" y="290" width="90" height="65" fill="#f7eaff" stroke="#08000e" stroke-width="20"/></g>
+</g>
+<text x="512" y="825" text-anchor="middle" font-family="DejaVu Sans,Arial,sans-serif" font-size="112" font-weight="900" letter-spacing="-8" fill="url(#violet)" stroke="#090012" stroke-width="26" paint-order="stroke">Alt3rEdit</text>
+<text x="512" y="825" text-anchor="middle" font-family="DejaVu Sans,Arial,sans-serif" font-size="112" font-weight="900" letter-spacing="-8" fill="url(#violet)" stroke="#f3c9ff" stroke-width="5" paint-order="stroke">Alt3rEdit</text>
+</svg>
