@@ -24,7 +24,7 @@ public:
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto center = winSize / 2.f;
 
-        auto const center2 = CCSize(220, 280) / 2;
+        auto const center2 = CCSize(220, 180) / 2;
 
 
         auto okSprite = ButtonSprite::create("OK", "bigFont.fnt", "GJ_button_01.png", .60f);
@@ -35,7 +35,7 @@ public:
             this,
             menu_selector(ScalePopup::onClose)
         );
-        okBtn->setPosition(center2 + ccp(0, -112));
+        okBtn->setPosition(center2 + ccp(0, -68));
         m_buttonMenu->addChild(okBtn);
 
         int input_width = 200;
