@@ -1,4 +1,4 @@
-# <span style="display: flex; align-items: center; gap: .25em"><img src="logo.png" width="50"> Alt3rEdit</span>
+# <span style="display: flex; align-items: center; gap: .25em"><img src="logo.svg" width="50"> Alt3rEdit</span>
 
 > [!WARNING]
 > **Alt3rEdit is a community-maintained fork of BetterEdit.** The original upstream project is no longer being developed. Alt3rEdit retains the upstream LGPLv3 license and credits its original contributors.
