@@ -41,5 +41,6 @@ The inventory is not a promise that every feature can be enabled unchanged. Each
 
 - Repository trees and project manifests inspected.
 - Compatibility differences recorded above.
-- No Tinker source has been enabled in the Alt3rEdit build yet.
-- No successful build is claimed at this stage.
+- Complete upstream Tinker repository is now pinned as a Git submodule at `third_party/Tinker` (commit `270d61e8c1f4d6fa29d47214f3e99a2eb670d82d`); `.gitmodules` records the source URL.
+- The submodule preserves all upstream files, assets, metadata, settings, and unfinished experiments without flattening or overwriting Alt3rEdit files.
+- This is a source import/staging step only: Tinker is not yet compiled into Alt3rEdit, its settings/resources are not merged, and no successful build is claimed.
