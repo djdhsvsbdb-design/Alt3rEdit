@@ -9,7 +9,7 @@ public:
 
     static HistoryPopup* create(FunctionToolPopup* functool) {
         auto* ret = new (std::nothrow) HistoryPopup();
-        ret->m_functool = functool;
+        if (ret) ret->m_functool = functool;
         if (ret && ret->init()) {
             ret->autorelease();
         } else {
