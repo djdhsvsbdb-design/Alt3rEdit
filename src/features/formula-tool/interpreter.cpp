@@ -1,0 +1,468 @@
+#include <cmath>
+#include <memory>
+#include <string>
+#include <variant>
+#include <vector>
+
+enum class TokenKind {
+    Literal,
+    Ident,
+    Comma,
+    LParen,
+    RParen,
+    Plus,
+    Minus,
+    Times,
+    Divide,
+    Pow,
+};
+
+struct Token {
+    TokenKind kind;
+    std::string ident;
+    double value;
+
+
+    std::string format() {
+        switch (this->kind) {
+            case TokenKind::Literal: return std::to_string(this->value);
+            case TokenKind::Ident:   return this->ident;
+            case TokenKind::Comma:   return ",";
+            case TokenKind::LParen:  return "(";
+            case TokenKind::RParen:  return ")";
+            case TokenKind::Plus:    return "+";
+            case TokenKind::Minus:   return "-";
+            case TokenKind::Times:   return "*";
+            case TokenKind::Divide:  return "/";
+            case TokenKind::Pow:     return "**";
+        }
+    }
+};
+
+using Tokens = std::vector<Token>;
+
+bool is_ident_char(char c, bool allow_digits) {
+    return (c == '_')
+        || ('A' <= c && c <= 'Z')
+        || ('a' <= c && c <= 'z')
+        || (allow_digits && ('0' <= c && c <= '9'))
+    ;
+}
+
+std::variant<Tokens, size_t> tokenize(std::string_view input) {
+    Tokens tokens{};
+    
+    size_t len = input.length();
+    size_t i = 0;
+    while (i < len) {
+        Token tok{};
+        bool add = true;
+
+        switch (input[i]) {
+            case ' ':
+            case '\t':
+                add = false;
+                break;
+            case ',': tok.kind = TokenKind::Comma; break;
+            case '(': tok.kind = TokenKind::LParen; break;
+            case ')': tok.kind = TokenKind::RParen; break;
+            case '+': tok.kind = TokenKind::Plus; break;
+            case '-': tok.kind = TokenKind::Minus; break;
+            case '/': tok.kind = TokenKind::Divide; break;
+            case '*': {
+                if (i+1 < input.length() && input[i+1] == '*') {
+                    i++;
+                    tok.kind = TokenKind::Pow;
+                } else {
+                    tok.kind = TokenKind::Times;
+                }
+                break;
+            }
+            default:
+                if (is_ident_char(input[i], false)) {
+                    tok.kind = TokenKind::Ident;
+
+                    while (i < len && is_ident_char(input[i], true)) {
+                        tok.ident.push_back(input[i]);
+                        i++;
+                    }
+                    i--;
+                } else if (input[i] == '.' || ('0' <= input[i] && input[i] <= '9')) {
+                    std::string value{};
+                    while (i < len && '0' <= input[i] && input[i] <= '9') {
+                        value.push_back(input[i]);
+                        i++;
+                    }
+                    if (i < len && input[i] == '.') {
+                        value.push_back('.');
+                        i++;
+                        
+                        while (i < len && '0' <= input[i] && input[i] <= '9') {
+                            value.push_back(input[i]);
+                            i++;
+                        }
+                    }
+
+                    tok.kind = TokenKind::Literal;
+                    tok.value = (value == ".") ? 0.0 : std::stod(value);
+                    i--;
+                } else {
+                    return i;
+                }
+        }
+
+        if (add) tokens.push_back(tok);
+        i++;
+    }
+
+    return tokens;
+}
+
+
+std::string format_tokens(Tokens tokens) {
+    std::string out = "";
+    for (auto tok : tokens) {
+        out.append(tok.format());
+    }
+
+    return out;
+}
+
+enum class ExprKind {
+    Literal,
+    Variable,
+    Application,
+    Neg,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Pow,
+};
+
+double PI = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470;
+
+struct InterpreterConfig {
+    double t;
+    bool use_radians;
+};
+
+struct Expr {
+    ExprKind kind;
+    // Variable, Application (function name)
+    std::string name;
+    // Literal
+    double value;
+    // Add, Sub, Mul, Div, Pow, Neg
+    std::unique_ptr<Expr> left;
+    // Add, Sub, Mul, Div, Pow
+    std::unique_ptr<Expr> right;
+    // Application
+    std::vector<Expr> args;
+
+    double interpret(InterpreterConfig c) {
+        switch (this->kind) {
+            case ExprKind::Literal: {
+                return this->value;
+            }
+            case ExprKind::Variable: {
+                if (this->name == "t") {
+                    return c.t;
+                } else if (this->name == "pi") {
+                    return PI;
+                } else {
+                    return NAN;
+                }
+            }
+            case ExprKind::Application: {
+                switch (this->args.size()) {
+                    case 0: {
+                        if (this->name == "random") {
+                            return double(std::rand()) / double(RAND_MAX);
+                        } else return NAN;
+
+                    }
+                    case 1: {
+                        double arg = this->args[0].interpret(c);
+
+                        double trig_arg = c.use_radians ? arg : PI*arg/180.0;
+                        #define trig_ret(y) ( c.use_radians ? (y) : 180.0*(y)/PI )
+
+                        if (std::isnan(arg)) return NAN;
+
+                        if      (this->name == "sin")   return std::sin(trig_arg);
+                        else if (this->name == "cos")   return std::cos(trig_arg);
+                        else if (this->name == "tan")   return std::tan(trig_arg);
+                        else if (this->name == "acos")  return trig_ret(std::acos(arg));
+                        else if (this->name == "asin")  return trig_ret(std::asin(arg));
+                        else if (this->name == "atan")  return trig_ret(std::atan(arg));
+                        else if (this->name == "sqrt")  return std::sqrt(arg);
+                        else if (this->name == "cbrt")  return std::cbrt(arg);
+                        else if (this->name == "exp")   return std::exp(arg);
+                        else if (this->name == "ln")    return std::log(arg);
+                        else if (this->name == "log10") return std::log10(arg);
+                        else if (this->name == "log2")  return std::log2(arg);
+                        else if (this->name == "cosh")  return std::cosh(arg);
+                        else if (this->name == "sinh")  return std::sinh(arg);
+                        else if (this->name == "tanh")  return std::tanh(arg);
+                        else if (this->name == "abs")   return std::abs(arg);
+                        else if (this->name == "floor") return std::floor(arg);
+                        else if (this->name == "ceil")  return std::ceil(arg);
+                        else if (this->name == "round") return std::round(arg);
+                        else if (this->name == "sgn") {
+                            if (arg == 0.0) {
+                                return 0.0;
+                            } else if (arg > 0.0) {
+                                return 1.0;
+                            } else {
+                                return -1.0;
+                            }
+                        } else return NAN;
+                    }
+                    case 2: {
+                        double arg1 = this->args[0].interpret(c);
+                        if (std::isnan(arg1)) return NAN;
+                        double arg2 = this->args[1].interpret(c);
+                        if (std::isnan(arg2)) return NAN;
+
+                        if      (this->name == "min") return std::min(arg1, arg2);
+                        else if (this->name == "max") return std::max(arg1, arg2);
+                        else return NAN;
+                    }
+                    default: return NAN;
+                }
+            }
+            case ExprKind::Neg: {
+                double arg = this->left->interpret(c);
+                return -arg;
+            }
+            case ExprKind::Add: {
+                double left = this->left->interpret(c);
+                double right = this->right->interpret(c);
+
+                return left + right;
+            }
+            case ExprKind::Sub: {
+                double left = this->left->interpret(c);
+                double right = this->right->interpret(c);
+
+                return left - right;
+            }
+            case ExprKind::Mul: {
+                double left = this->left->interpret(c);
+                double right = this->right->interpret(c);
+
+                return left * right;
+            }
+            case ExprKind::Div: {
+                double left = this->left->interpret(c);
+                double right = this->right->interpret(c);
+
+                if (std::abs(right) < 10e-6) return NAN;
+
+                return left / right;
+            }
+            case ExprKind::Pow: {
+                double left = this->left->interpret(c);
+                double right = this->right->interpret(c);
+
+                if (std::isnan(left) || std::isnan(right)) return NAN;
+
+                if (left < 0.0) {
+                    const double rounded = std::round(right);
+                    if (std::abs(right - rounded) > 1e-6) return NAN;
+                    right = rounded;
+                }
+
+                return std::pow(left, right);
+            }
+    
+        }
+    }
+};
+
+using ParseResult = std::variant<Expr, std::string>;
+
+#define TRY(var, expr) {\
+    ParseResult _try_val = expr;\
+    if (_try_val.index() == 0) {\
+        var = std::move(std::get<0>(_try_val));\
+    } else {\
+        return _try_val;\
+    }\
+}
+
+ParseResult parse_expression(Tokens& tokens);
+ParseResult parse_sum(Tokens& tokens, size_t& at);
+ParseResult parse_product(Tokens& tokens, size_t& at);
+ParseResult parse_pow(Tokens& tokens, size_t& at);
+ParseResult parse_primary(Tokens& tokens, size_t& at);
+
+ParseResult parse_expression(Tokens& tokens) {
+    size_t at = 0;
+    auto result = parse_sum(tokens, at);
+    if (result.index() != 0) return result;
+    if (at != tokens.size()) {
+        return fmt::format("unexpected token {} at token {}", tokens[at].format(), at + 1);
+    }
+    return result;
+}
+
+ParseResult parse_sum(Tokens& tokens, size_t& at) {
+    Expr expr; TRY(expr, parse_product(tokens, at));
+
+    while (at < tokens.size() && (tokens[at].kind == TokenKind::Plus || tokens[at].kind == TokenKind::Minus)) {
+        if (tokens[at].kind == TokenKind::Plus) {
+            at++;
+            Expr right; TRY(right, parse_product(tokens, at));
+            expr = {
+                .kind = ExprKind::Add,
+                .left = std::make_unique<Expr>(std::move(expr)),
+                .right = std::make_unique<Expr>(std::move(right))
+            };
+        } else if (tokens[at].kind == TokenKind::Minus) {
+            at++;
+            Expr right; TRY(right, parse_product(tokens, at));
+            expr = {
+                .kind = ExprKind::Sub,
+                .left = std::make_unique<Expr>(std::move(expr)),
+                .right = std::make_unique<Expr>(std::move(right))
+            };
+        }
+    }
+
+    return expr;
+}
+
+ParseResult parse_product(Tokens& tokens, size_t& at) {
+    Expr expr;
+    TRY(expr, parse_pow(tokens, at));
+
+    while (at < tokens.size() && (tokens[at].kind == TokenKind::Times || tokens[at].kind == TokenKind::Divide)) {
+        if (tokens[at].kind == TokenKind::Times) {
+            at++;
+            Expr right;
+            TRY(right, parse_pow(tokens, at));
+            expr = {
+                .kind = ExprKind::Mul,
+                .left = std::make_unique<Expr>(std::move(expr)),
+                .right = std::make_unique<Expr>(std::move(right))
+            };
+        } else if (tokens[at].kind == TokenKind::Divide) {
+            at++;
+            Expr right;
+            TRY(right, parse_pow(tokens, at));
+            expr = {
+                .kind = ExprKind::Div,
+                .left = std::make_unique<Expr>(std::move(expr)),
+                .right = std::make_unique<Expr>(std::move(right))
+            };
+        }
+    }
+
+    return expr;
+}
+
+ParseResult parse_pow(Tokens& tokens, size_t& at) {
+    Expr expr;
+    TRY(expr, parse_primary(tokens, at));
+
+    if (at < tokens.size() && tokens[at].kind == TokenKind::Pow) {
+        at++;
+        Expr right;
+        TRY(right, parse_pow(tokens, at));
+        expr = {
+            .kind = ExprKind::Pow,
+            .left = std::make_unique<Expr>(std::move(expr)),
+            .right = std::make_unique<Expr>(std::move(right))
+        };
+    }
+
+    return expr;
+}
+
+ParseResult parse_primary(Tokens& tokens, size_t& at) {
+    if (at >= tokens.size()) {
+        return "expected expression, found end of string";
+    }
+
+    Expr expr;
+
+    switch (tokens[at].kind) {
+        case TokenKind::Minus: {
+            at++;
+            Expr inner;
+            TRY(inner, parse_primary(tokens, at));
+            expr = {
+                .kind = ExprKind::Neg,
+                .left = std::make_unique<Expr>(std::move(inner)),
+            };
+            break;
+        }
+        case TokenKind::LParen: {
+            at++;
+            TRY(expr, parse_sum(tokens, at));
+
+            if (!(at < tokens.size() && tokens[at].kind == TokenKind::RParen)) {
+                return fmt::format("expected ')' after parenthesized expression at token {}", at+1);
+            }
+            at++;
+            break;
+        }
+        case TokenKind::Literal: {
+            expr = {
+                .kind = ExprKind::Literal,
+                .value = tokens[at].value,
+            };
+            at++;
+            break;
+        }
+        case TokenKind::Ident: {
+            if (at+1 < tokens.size() && tokens[at+1].kind == TokenKind::LParen) {
+                auto func_name = tokens[at].ident;
+                at += 2;
+
+                if (at < tokens.size() && tokens[at].kind == TokenKind::RParen) {
+                    expr = { .kind = ExprKind::Application, .name = func_name, .args = {} };
+                    at++;
+                    break;
+                }
+
+                Expr first;
+                TRY(first, parse_sum(tokens, at));
+                std::vector<Expr> args{};
+                args.push_back(std::move(first));
+                
+                while (at < tokens.size() && tokens[at].kind == TokenKind::Comma) {
+                    at++;
+                    Expr arg;
+                    TRY(arg, parse_sum(tokens, at));
+                    args.push_back(std::move(arg));
+                }
+
+                if (!(at < tokens.size() && tokens[at].kind == TokenKind::RParen)) {
+                    return fmt::format("expected ')' after function arguments at token {}", at+1);
+                }
+                at++;
+
+                expr = {
+                    .kind = ExprKind::Application,
+                    .name = func_name,
+                    .args = std::move(args),
+                };
+            } else {
+                expr = {
+                    .kind = ExprKind::Variable,
+                    .name = tokens[at].ident
+                };
+                at++;
+            }
+            break;
+        }
+        default: {
+            return fmt::format("unexpected token {} at token {}", tokens[at].format(), at+1);
+        }
+    }
+
+    return expr;
+}
