@@ -28,7 +28,7 @@ public:
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto center = winSize / 2.f;
 
-        auto const center2 = CCSize(440, 280) / 2;
+        auto const center2 = CCSize(440, 180) / 2;
 
         auto okSprite = ButtonSprite::create("OK", "bigFont.fnt", "GJ_button_01.png", .60f);
         okSprite->setScale(0.85f);
@@ -39,9 +39,7 @@ public:
             menu_selector(HsvPopup::onClose)
         );
 
-        okBtn->setPosition(center2 + ccp(0, -112));
-        m_buttonMenu->addChild(okBtn);
-        okBtn->setPosition(center2 + ccp(0, -112));
+        okBtn->setPosition(center2 + ccp(0, -68));
         m_buttonMenu->addChild(okBtn);
 
         int input_width = 205;
