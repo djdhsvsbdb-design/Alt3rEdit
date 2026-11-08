@@ -7,23 +7,34 @@
 #include <utils/Editor.hpp>
 
 bool ObjectFinderPopup::init(EditorUI* ui) {
-    if (!Popup::init(300, 180)) {
+    if (!Popup::init(300, 210)) {
         return false;
     }
 
     m_ui = ui;
     this->setTitle("Object Finder");
 
-    m_resultsLabel = CCLabelBMFont::create("Enter an Object ID or Group ID", "bigFont.fnt");
-    m_resultsLabel->setScale(.4f);
-    m_mainLayer->addChildAtPosition(m_resultsLabel, Anchor::Center, ccp(0, 15));
+    m_modeLabel = CCLabelBMFont::create("Mode: Object ID", "bigFont.fnt");
+    m_modeLabel->setScale(.45f);
+    m_mainLayer->addChildAtPosition(m_modeLabel, Anchor::Top, ccp(0, -30));
 
-    m_search = TextInput::create(220.f, "Object ID or Group ID");
+    auto modeSprite = ButtonSprite::create("Switch Mode", "goldFont.fnt", "GJ_button_01.png", .7f);
+    modeSprite->setScale(.65f);
+    auto modeButton = CCMenuItemSpriteExtra::create(
+        modeSprite, this, menu_selector(ObjectFinderPopup::onSwitchMode)
+    );
+    m_buttonMenu->addChildAtPosition(modeButton, Anchor::Top, ccp(0, -58));
+
+    m_resultsLabel = CCLabelBMFont::create("Enter an Object ID", "bigFont.fnt");
+    m_resultsLabel->setScale(.4f);
+    m_mainLayer->addChildAtPosition(m_resultsLabel, Anchor::Center, ccp(0, -5));
+
+    m_search = TextInput::create(220.f, "Enter numeric ID");
     m_search->setCommonFilter(CommonFilter::Uint);
     m_search->setCallback([this](std::string const& query) {
         this->updateResults(query);
     });
-    m_mainLayer->addChildAtPosition(m_search, Anchor::Bottom, ccp(0, 45));
+    m_mainLayer->addChildAtPosition(m_search, Anchor::Bottom, ccp(0, 48));
 
     auto buttonSprite = ButtonSprite::create("Select Objects", "goldFont.fnt", "GJ_button_01.png", .8f);
     buttonSprite->setScale(.7f);
@@ -67,8 +78,8 @@ void ObjectFinderPopup::updateResults(std::string const& query) {
                     continue;
                 }
 
-                bool matches = object->m_objectID == searchID;
-                if (!matches && object->m_groups) {
+                bool matches = !m_searchByGroup && object->m_objectID == searchID;
+                if (m_searchByGroup && object->m_groups) {
                     const int groupCount = std::clamp(static_cast<int>(object->m_groupCount), 0, 10);
                     for (int i = 0; i < groupCount; ++i) {
                         if ((*object->m_groups)[i] == searchID) {
@@ -89,12 +100,19 @@ void ObjectFinderPopup::updateResults(std::string const& query) {
     m_selectButton->setEnabled(results->count() > 0);
 
     if (query.empty()) {
-        m_resultsLabel->setString("Enter an Object ID or Group ID");
+        m_resultsLabel->setString(m_searchByGroup ? "Enter a Group ID" : "Enter an Object ID");
     }
     else {
         auto label = std::to_string(results->count()) + " object(s) found";
         m_resultsLabel->setString(label.c_str());
     }
+}
+
+void ObjectFinderPopup::onSwitchMode(CCObject*) {
+    m_searchByGroup = !m_searchByGroup;
+    m_modeLabel->setString(m_searchByGroup ? "Mode: Group ID" : "Mode: Object ID");
+    m_search->setString("");
+    this->updateResults("");
 }
 
 void ObjectFinderPopup::onSelect(CCObject*) {
