@@ -68,7 +68,7 @@ public:
         if (!Popup::init(440, 180)) return false;
 
         m_noElasticity = true;
-        this->setTitle("Function tool");
+        this->setTitle("Formula Tool");
 
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto center = winSize / 2.f;
@@ -306,11 +306,11 @@ public:
     void onBubble(CCObject*) {
         geode::createQuickPopup(
             "Guide",
-            "Do you want to open the Functional guide?",
+            "Do you want to open the Formula Tool guide?",
             "No", "Yes",
             [](auto, bool yes) {
                 if (yes) {
-                    utils::web::openLinkInBrowser("https://github.com/anatom3000/Functional/blob/dev/guide.md");
+                    utils::web::openLinkInBrowser("https://github.com/djdhsvsbdb-design/Prosto-bob/blob/dev/guide.md");
                     Notification::create(
                         "Opening guide, check your browser...",
                         NotificationIcon::Info
@@ -457,7 +457,7 @@ public:
         #define one  { .kind = ExprKind::Literal, .value = 1.0 }
 
         parse_field(x_expr,                 m_input_x->getString(),         "position x(t)",        zero);
-        parse_field(y_expr,                 m_input_y->getString(),         "position x(t)",        zero);
+        parse_field(y_expr,                 m_input_y->getString(),         "position y(t)",        zero);
         parse_field(scale_x_expr,           m_scale_x,                      "scale x(t)",           one );
         parse_field(scale_y_expr,           m_scale_y,                      "scale y(t)",           one );
         parse_field(rotation_expr,          m_input_rotation->getString(),  "rotation(t)",          zero);
