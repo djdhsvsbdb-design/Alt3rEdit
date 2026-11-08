@@ -365,7 +365,13 @@ public:
     }
 
     std::optional<Expr> parse_input(std::string input, const char* field, Expr if_empty) {
-        auto tokens_result = tokenize(input);
+        std::variant<Tokens, size_t> tokens_result;
+        try {
+            tokens_result = tokenize(input);
+        } catch (std::exception const&) {
+            FLAlertLayer::create("Error", fmt::format("{}: number is outside the supported range", field), "OK")->show();
+            return std::nullopt;
+        }
 
         if (tokens_result.index() != 0) {
             auto index = std::get<1>(tokens_result);
@@ -584,7 +590,12 @@ public:
 			objs->addObjectsFromArray(current);
 		}
 
-		editor->m_undoObjects->addObject(UndoObject::createWithArray(objs, UndoCommand::Paste));
+		if (objs->count() == 0) {
+            FLAlertLayer::create("Error", "The formulas did not produce any valid copies. Original objects were kept.", "OK")->show();
+            return;
+        }
+
+        editor->m_undoObjects->addObject(UndoObject::createWithArray(objs, UndoCommand::Paste));
 
         if (m_delete_original) ui->onDeleteSelected(nullptr);
 
