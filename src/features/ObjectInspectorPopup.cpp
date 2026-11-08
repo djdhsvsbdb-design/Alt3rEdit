@@ -6,7 +6,7 @@
 #include <utils/Editor.hpp>
 
 bool ObjectInspectorPopup::init(EditorUI* ui) {
-    if (!Popup::init(300, 220)) {
+    if (!Popup::init(320, 250)) {
         return false;
     }
 
@@ -23,6 +23,8 @@ bool ObjectInspectorPopup::init(EditorUI* ui) {
     auto selected = be::getSelectedObjects(m_ui);
     std::set<int> objectIDs;
     std::set<int> groupIDs;
+    std::set<int> baseColorIDs;
+    std::set<int> detailColorIDs;
 
     for (auto object : selected) {
         if (!object) {
@@ -30,6 +32,12 @@ bool ObjectInspectorPopup::init(EditorUI* ui) {
         }
 
         objectIDs.insert(object->m_objectID);
+        if (object->m_baseColorID > 0) {
+            baseColorIDs.insert(object->m_baseColorID);
+        }
+        if (object->m_detailColorID > 0) {
+            detailColorIDs.insert(object->m_detailColorID);
+        }
         if (object->m_groups) {
             const int count = std::clamp(static_cast<int>(object->m_groupCount), 0, 10);
             for (int i = 0; i < count; ++i) {
@@ -72,9 +80,38 @@ bool ObjectInspectorPopup::init(EditorUI* ui) {
         }
     }
 
+    details << "\nBase color channels: " << baseColorIDs.size();
+    details << "\nDetail color channels: " << detailColorIDs.size();
+
+    details << "\nBase channel IDs: ";
+    if (baseColorIDs.empty()) {
+        details << "none";
+    }
+    else {
+        bool first = true;
+        for (int id : baseColorIDs) {
+            if (!first) details << ", ";
+            details << id;
+            first = false;
+        }
+    }
+
+    details << "\nDetail channel IDs: ";
+    if (detailColorIDs.empty()) {
+        details << "none";
+    }
+    else {
+        bool first = true;
+        for (int id : detailColorIDs) {
+            if (!first) details << ", ";
+            details << id;
+            first = false;
+        }
+    }
+
     auto label = CCLabelBMFont::create(details.str().c_str(), "bigFont.fnt");
     label->setAnchorPoint(ccp(.5f, .5f));
-    label->setScale(.38f);
+    label->setScale(.34f);
     label->setWidth(690.f);
     m_mainLayer->addChildAtPosition(label, Anchor::Center, ccp(0, -5));
 
