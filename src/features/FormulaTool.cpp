@@ -7,6 +7,8 @@
 #include <cctype>
 #include <cstdlib>
 #include <string_view>
+#include <stdexcept>
+#include <exception>
 
 using namespace geode;
 using namespace cocos2d;
@@ -25,11 +27,11 @@ public:
     TextInput* m_input_start;
     TextInput* m_input_end;
 
-    bool m_abs_scaling;
-    bool m_abs_rotation;
-    bool m_use_robtop_units;
-    bool m_use_radians;
-    bool m_delete_original;
+    bool m_abs_scaling = false;
+    bool m_abs_rotation = false;
+    bool m_use_robtop_units = false;
+    bool m_use_radians = false;
+    bool m_delete_original = true;
 
     std::string m_scale_x;
     std::string m_scale_y;
