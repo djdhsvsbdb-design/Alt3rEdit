@@ -1,5 +1,8 @@
 # BetterEdit 6
 
+## Unreleased
+ * Add the formula object tool (`f(x)`) for placing and transforming selected objects with mathematical expressions, reusable presets, scale controls, and HSV adjustments.
+
 ## v6.10.0
  * Scrap the WIP features as they were never going to be finished :(
 
