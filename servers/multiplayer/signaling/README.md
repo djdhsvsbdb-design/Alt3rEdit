@@ -21,8 +21,9 @@ In Geometry Dash, go to the Multiplayer Edit mod settings and change the **Signa
 
 ## How It Works
 
-1. **Host** creates a room -> POSTs to `/rooms` and receives a 6-character room code.
-2. **Guests** join using the room code -> POSTs to `/rooms/:code/join` and gets the Host's metadata.
+1. **Host** creates a room -> POSTs to `/rooms` and receives a 6-character room code and private host token.
+2. **Guests** join using the room code -> POSTs to `/rooms/:code/join` and receives a private session token and the Host's metadata.
+3. Host and guest tokens authenticate polling and signaling; room codes alone cannot delete rooms, ban players, or inject signaling messages.
 3. **Guest** generates a WebRTC Offer and POSTs it to the signaling server.
 4. **Host** polls for Offers, retrieves the Guest's Offer, generates an Answer, and POSTs it back.
 5. **Guest** polls for Answers and retrieves the Host's Answer.
@@ -36,9 +37,9 @@ In Geometry Dash, go to the Multiplayer Edit mod settings and change the **Signa
 | GET | `/rooms` | Get list of public active rooms |
 | GET | `/rooms/:code` | Get room info |
 | POST | `/rooms/:code/join` | Join room. Body: `{playerName, password}` |
-| POST | `/rooms/:code/leave` | Leave room. Body: `{playerId}` |
-| POST | `/rooms/:code/signal` | Send WebRTC message (Offer, Answer, or ICE). Body: `{type, ...msg}` |
-| GET | `/rooms/:code/signal?role=<host\|client>&playerId=N` | Poll for pending WebRTC messages |
-| POST | `/rooms/:code/ban` | Ban a player from a room. Body: `{playerName}` |
-| DELETE | `/rooms/:code` | Close room (Host only) |
+| POST | `/rooms/:code/leave` | Leave room. Body: `{playerId, sessionToken}` |
+| POST | `/rooms/:code/signal` | Send WebRTC message. Host requests include `hostToken`; client requests include `playerId` and `sessionToken`. |
+| GET | `/rooms/:code/signal?role=<host\|client>&playerId=N` | Poll for pending messages. Host must include `hostToken`; clients must include `sessionToken`. |
+| POST | `/rooms/:code/ban` | Ban a player. Body: `{playerName, hostToken}` |
+| DELETE | `/rooms/:code?hostToken=...` | Close room (Host only). |
 | GET | `/health` | Health check |
