@@ -115,7 +115,7 @@ class WSServer {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Room Backups - ${room.levelName}</title>
+          <title>Room Backups - ${roomNameHtml}</title>
           <style>
             body { font-family: sans-serif; background: #1a1a1a; color: #fff; padding: 2rem; max-width: 800px; margin: 0 auto; }
             h1 { border-bottom: 2px solid #333; padding-bottom: 0.5rem; }
