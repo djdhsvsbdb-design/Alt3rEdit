@@ -107,7 +107,8 @@ function parseLevels(xml) {
 }
 
 function parseGmd(xml) {
-    return [parseLevelDict(xml)];
+    const level = parseLevelDict(xml);
+    return level ? [level] : [];
 }
 
 function parseLevelDict(dictXml) {
