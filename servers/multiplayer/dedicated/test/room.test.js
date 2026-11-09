@@ -61,11 +61,15 @@ test("only the room moderator can change player view-only state", (t) => {
   const room = makeRoom();
   t.after(() => room.destroy());
   const hostMessages = [];
+  const guestMessages = [];
   const hostId = room.addPlayer("Host", 0, {
     readyState: 1, send(data) { hostMessages.push(data); }, close() {},
   });
-  const guestId = room.addPlayer("Guest", 0, { readyState: 1, send() {}, close() {} });
+  const guestId = room.addPlayer("Guest", 0, {
+    readyState: 1, send(data) { guestMessages.push(data); }, close() {},
+  });
   hostMessages.length = 0;
+  guestMessages.length = 0;
 
   const writer = new proto.Writer();
   writer.writeOpcode(proto.Opcode.SetViewOnly);
@@ -77,7 +81,7 @@ test("only the room moderator can change player view-only state", (t) => {
   assert.equal(hostMessages.length, 0);
 
   room.handleMessage(hostId, message);
-  assert.equal(hostMessages.length, 1);
+  assert.equal(guestMessages.length, 1);
 });
 
 test("rejects unsolicited snapshots from clients that were not asked", (t) => {
