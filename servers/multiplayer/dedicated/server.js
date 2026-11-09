@@ -8,6 +8,7 @@ const saveReader = require("./src/save-reader");
 const proto = require("./src/protocol");
 const { RoomManager } = require("./src/room-manager");
 const { WSServer } = require("./src/ws-server");
+const { DEFAULT_CONFIG, normalizeServerConfig } = require("./src/config");
 let roomManager = null;
 let wsServer = null;
 let rlAdmin = null;
@@ -17,22 +18,12 @@ let globalAutosaveInterval = 5;
 let autosaveTimer = null;
 
 const configPath = path.join(process.cwd(), "config.json");
-const defaultConfig = {
-  useConfig: 0,
-  mode: "gmd",
-  customPath: "",
-  selectedLevels: ["all"],
-  port: 7575,
-  maxPlayers: 0,
-  password: "",
-  autosaveInterval: 0,
-  defaultViewOnly: false
-};
-let serverConfig = { ...defaultConfig };
+const defaultConfig = DEFAULT_CONFIG;
+let serverConfig = normalizeServerConfig(defaultConfig);
 if (fs.existsSync(configPath)) {
   try {
     const parsed = JSON.parse(fs.readFileSync(configPath, "utf8"));
-    serverConfig = { ...defaultConfig, ...parsed };
+    serverConfig = normalizeServerConfig(parsed);
   } catch (e) {
     console.error("\x1b[31m[ERROR]\x1b[0m Failed to parse config.json. Using defaults.");
   }
