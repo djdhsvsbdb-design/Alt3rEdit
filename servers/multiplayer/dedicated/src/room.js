@@ -3,6 +3,10 @@ const proto = require('./protocol');
 const CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const MAX_CHUNK_BYTES = 30000;
 const MAX_UUIDS_PER_CHUNK = 500;
+const MAX_SNAPSHOT_CHUNKS = 8192;
+const MAX_SNAPSHOT_OBJECTS = 1000000;
+const MAX_SNAPSHOT_BYTES = 32 * 1024 * 1024;
+const MAX_LOCK_SECONDS = 5;
 function generateRoomCode() {
     let code = '';
     for (let i = 0; i < 6; i++) {
@@ -28,7 +32,8 @@ class Room {
         this.lastSavedAt = Date.now();
         this.locks = new Map(); 
         this.colorChannels = new Map(); 
-        this.players = new Map(); 
+        this.players = new Map();
+        this.hostPlayerId = null; 
         this.nextPlayerId = 1; 
         this.banned = new Set();
         this.password = '';
@@ -72,6 +77,7 @@ class Room {
         const playerId = this.nextPlayerId++;
         const player = { id: playerId, name, colorIndex, iconStr, ws, isViewOnly: !!this.settings.defaultViewOnly };
         this.players.set(playerId, player);
+        if (this.hostPlayerId === null) this.hostPlayerId = playerId;
         console.log(`  \x1b[32m[JOIN]\x1b[0m ${name} (id: ${playerId}) | Total players: ${this.players.size}`);
         const joinMsg = proto.serializePlayerJoined(playerId, name, colorIndex, iconStr);
         this._broadcastExcept(joinMsg, playerId);
@@ -101,6 +107,12 @@ class Room {
         const player = this.players.get(playerId);
         if (!player) return;
         this.players.delete(playerId);
+        if (this.hostPlayerId === playerId) {
+            this.hostPlayerId = this.players.size > 0 ? this.players.keys().next().value : null;
+        }
+        if (this.snapshotPending && this.snapshotState?.fromPlayerId === playerId) {
+            this._abortSnapshot();
+        }
         console.log(`  \x1b[31m[LEAVE]\x1b[0m ${player.name} (id: ${playerId}) | Total players: ${this.players.size}`);
         for (const [uuid, lock] of this.locks) {
             if (lock.playerId === playerId) {
@@ -242,6 +254,7 @@ class Room {
         const r = new proto.Reader(data.slice(1));
         const targetId = r.readVarInt();
         if (r.error) return;
+        if (fromId !== this.hostPlayerId || targetId === fromId) return;
         const target = this.players.get(targetId);
         if (target) {
             const errBuf = proto.serializeError('You have been kicked');
@@ -254,6 +267,7 @@ class Room {
         const r = new proto.Reader(data.slice(1));
         const targetId = r.readVarInt();
         if (r.error) return;
+        if (fromId !== this.hostPlayerId || targetId === fromId) return;
         const target = this.players.get(targetId);
         if (target) {
             this.banned.add(target.name);
@@ -353,89 +367,116 @@ class Room {
         if (!target) return;
         this.snapshotPending = true;
         this.snapshotRequestedAt = this.history.length;
-        this.locks.clear();
         this.snapshotState = {
             fromPlayerId: target.id,
             totalChunks: 0,
+            totalObjects: 0,
             chunks: [],
             uuidChunks: [],
             settings: null,
+            locks: new Map(),
+            receivedBytes: 0,
+            receivedObjects: 0,
             active: false,
         };
         target.ws.send(proto.serializeRequestSnapshot());
         console.log(`  [${this.code}] Requested snapshot from ${target.name}`);
     }
+    _abortSnapshot() {
+        this.snapshotPending = false;
+        this.snapshotState = null;
+        this.snapshotRequestedAt = 0;
+    }
     _handleSnapshotResponse(playerId, opcode, data) {
         if (opcode === proto.Opcode.SyncLevelStart) {
+            const snap = this.snapshotState;
+            if (!this.snapshotPending || !snap || playerId !== snap.fromPlayerId) return true;
             const r = new proto.Reader(data.slice(1));
             const msg = proto.deserializeSyncLevelStart(r);
-            if (r.error) return true;
-            this.locks.clear();
-            if (!this.snapshotPending) {
-                this.snapshotRequestedAt = this.history.length;
+            if (r.error || msg.totalChunks < 1 || msg.totalChunks > MAX_SNAPSHOT_CHUNKS ||
+                msg.totalObjects > MAX_SNAPSHOT_OBJECTS) {
+                this._abortSnapshot();
+                return true;
             }
-            this.snapshotState = {
-                fromPlayerId: playerId,
-                active: true,
-                totalChunks: msg.totalChunks,
-                settings: msg.settings,
-                chunks: new Array(msg.totalChunks).fill(null),
-                uuidChunks: new Array(msg.totalChunks).fill(null),
-            };
-            this.snapshotPending = true;
+            snap.active = true;
+            snap.totalChunks = msg.totalChunks;
+            snap.totalObjects = msg.totalObjects;
+            snap.settings = msg.settings;
+            snap.chunks = new Array(msg.totalChunks).fill(null);
+            snap.uuidChunks = new Array(msg.totalChunks).fill(null);
+            snap.locks = new Map();
+            snap.receivedBytes = 0;
+            snap.receivedObjects = 0;
             return true;
         }
 
         const snap = this.snapshotState;
-        if (!snap || !snap.active || playerId !== snap.fromPlayerId) return false;
-        if (opcode === proto.Opcode.SyncLevelChunk && snap.active) {
+        if (!this.snapshotPending || !snap || !snap.active || playerId !== snap.fromPlayerId) return true;
+        if (opcode === proto.Opcode.SyncLevelChunk) {
             const r = new proto.Reader(data.slice(1));
             const msg = proto.deserializeSyncLevelChunk(r);
-            if (r.error) return true;
-            if (msg.chunkIndex < snap.totalChunks) {
-                snap.chunks[msg.chunkIndex] = msg.data;
-                snap.uuidChunks[msg.chunkIndex] = msg.uuids;
+            if (r.error || msg.chunkIndex >= snap.totalChunks ||
+                msg.data.length > MAX_CHUNK_BYTES || msg.uuids.length > MAX_UUIDS_PER_CHUNK ||
+                snap.chunks[msg.chunkIndex] !== null ||
+                snap.receivedBytes + msg.data.length > MAX_SNAPSHOT_BYTES ||
+                snap.receivedObjects + msg.uuids.length > snap.totalObjects) {
+                this._abortSnapshot();
+                return true;
             }
+            snap.chunks[msg.chunkIndex] = msg.data;
+            snap.uuidChunks[msg.chunkIndex] = msg.uuids;
+            snap.receivedBytes += msg.data.length;
+            snap.receivedObjects += msg.uuids.length;
             return true;
         }
-        if (opcode === proto.Opcode.SyncLocksChunk && snap.active) {
+        if (opcode === proto.Opcode.SyncLocksChunk) {
             const r = new proto.Reader(data.slice(1));
             const msg = proto.deserializeSyncLocksChunk(r);
+            if (r.error) {
+                this._abortSnapshot();
+                return true;
+            }
             const now = Date.now();
             for (const lock of msg.locks) {
-                this.locks.set(lock.uuid, {
+                if (!lock.uuid || !Number.isFinite(lock.timeLeft) || lock.timeLeft <= 0 ||
+                    lock.timeLeft > MAX_LOCK_SECONDS) continue;
+                snap.locks.set(lock.uuid, {
                     playerId: lock.playerId,
-                    time: now
+                    expiresAt: now + lock.timeLeft * 1000,
                 });
             }
             return true;
         }
-        if (opcode === proto.Opcode.SyncLevelEnd && snap.active) {
+        if (opcode === proto.Opcode.SyncLevelEnd) {
             const r = new proto.Reader(data.slice(1));
-            const msg = proto.deserializeSyncLevelEnd(r);
-            const allData = [];
+            proto.deserializeSyncLevelEnd(r);
             const allUuids = [];
-            for (let i = 0; i < snap.totalChunks; i++) {
-                if (snap.chunks[i]) allData.push(snap.chunks[i]);
-                if (snap.uuidChunks[i]) allUuids.push(...snap.uuidChunks[i]);
-            }
-            this.compressedLevelData = Buffer.concat(allData);
-            this.uuids = allUuids;
-            if (snap.settings) {
-                this.settings = snap.settings;
-                if (snap.settings.levelName) {
-                    this.levelName = snap.settings.levelName;
+            if (!r.error) {
+                for (const chunk of snap.uuidChunks) {
+                    if (chunk) allUuids.push(...chunk);
                 }
             }
-            
+            const complete = !r.error &&
+                snap.chunks.every(chunk => chunk !== null) &&
+                allUuids.length === snap.totalObjects &&
+                snap.receivedObjects === snap.totalObjects;
+            if (!complete) {
+                this._abortSnapshot();
+                return true;
+            }
+
+            this.compressedLevelData = Buffer.concat(snap.chunks);
+            this.uuids = allUuids;
+            this.locks = snap.locks;
+            if (snap.settings) {
+                this.settings = snap.settings;
+                if (snap.settings.levelName) this.levelName = snap.settings.levelName;
+            }
             this.dirty = false;
+            const historyIndex = this.snapshotRequestedAt;
             this.snapshotPending = false;
             this.snapshotState = null;
-            if (this.snapshotRequestedAt !== undefined && this.snapshotRequestedAt > 0) {
-                this.history = this.history.slice(this.snapshotRequestedAt);
-            } else {
-                this.history = [];
-            }
+            this.history = this.history.slice(historyIndex);
             this.snapshotRequestedAt = 0;
             console.log(`  [${this.code}] Snapshot received (${allUuids.length} objects, ${this.compressedLevelData.length} bytes)`);
             if (this.onSnapshotSaved) this.onSnapshotSaved(this);
