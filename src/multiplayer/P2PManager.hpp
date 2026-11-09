@@ -240,6 +240,8 @@ namespace mpedit {
         geode::async::TaskHolder<geode::utils::web::WebResponse> m_signalPollListener;
         std::atomic<bool> m_signalingActive{false};
         std::string m_signalingRoomId;
+        std::string m_signalingHostToken;
+        std::string m_signalingPlayerToken;
         std::chrono::time_point<std::chrono::steady_clock> m_fastPollEndTime;
         void extendFastPoll();
 
