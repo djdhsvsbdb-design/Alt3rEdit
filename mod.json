@@ -1,5 +1,5 @@
 {
-  "geode": "5.6.1",
+  "geode": "5.11.2",
   "version": "6.10.0",
   "gd": {
     "win": "2.2081",
@@ -10,9 +10,12 @@
   "id": "hjfod.betteredit",
   "name": "Alt3rEdit",
   "developers": [
-    "HJfod"
+    "HJfod",
+    "djdhsvsbdb-design",
+    "d050",
+    "xXoanon"
   ],
-  "description": "The Ultimate Editor Mod",
+  "description": "The Ultimate Editor Mod with real-time collaborative multiplayer editing.",
   "links": {
     "homepage": "https://editool.ru/?lang=ru",
     "source": "https://github.com/HJfod/BetterEdit",
@@ -661,12 +664,122 @@
       "description": "Show statistics for selected objects, object IDs, and groups",
       "category": "editor",
       "default": []
+    },
+    "connection-section": {
+      "type": "title",
+      "name": "Connection Settings"
+    },
+    "signaling-url": {
+      "type": "string",
+      "name": "Signaling Server URL",
+      "description": "URL of the signaling server used for connection setup. Only change this if you're self-hosting your own signaling server.",
+      "default": "https://multiplayer-edit.d050.workers.dev",
+      "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:/.?&=-_"
+    },
+    "ice-transport-mode": {
+      "type": "string",
+      "name": "Connection Mode",
+      "description": "How to connect to other players. Auto is recommended. STUN Only is direct connection only. TURN Only routes through a relay.",
+      "default": "Auto",
+      "one-of": [
+        "Auto",
+        "STUN Only",
+        "TURN Only"
+      ]
+    },
+    "player-name": {
+      "type": "string",
+      "name": "Player Name",
+      "description": "Your display name in multiplayer sessions. Leave empty to automatically use your username.",
+      "default": "",
+      "match": "^.{0,15}$"
+    },
+    "display-section": {
+      "type": "title",
+      "name": "Display"
+    },
+    "customize-appearance": {
+      "type": "custom:appearance",
+      "name": "Cursor Customization",
+      "description": "Customize your editor cursor style and multiplayer color."
+    },
+    "show-cursors": {
+      "type": "bool",
+      "name": "Show Player Cursors",
+      "description": "Display other players' cursor positions in the editor.",
+      "default": true
+    },
+    "show-offscreen-indicators": {
+      "type": "bool",
+      "name": "Off-Screen Indicators",
+      "description": "Show pointers at the screen edges for players who are off-screen.",
+      "default": true
+    },
+    "show-chat-bubbles": {
+      "type": "bool",
+      "name": "Show Chat Bubbles",
+      "description": "Display chat bubbles above players when they send messages.",
+      "default": true
+    },
+    "chat-bubble-duration": {
+      "type": "float",
+      "name": "Chat Bubble Duration",
+      "description": "How long (in seconds) chat bubbles stay visible.",
+      "default": 5,
+      "min": 1,
+      "max": 15,
+      "control": {
+        "slider": true
+      }
+    },
+    "show-notifications": {
+      "type": "bool",
+      "name": "Show Notifications",
+      "description": "Show notifications when players join/leave.",
+      "default": true
+    },
+    "chat-filter": {
+      "type": "bool",
+      "name": "Chat Filter",
+      "description": "Filters profanity in lobby names and chat.",
+      "default": true
+    },
+    "check-updates": {
+      "type": "bool",
+      "name": "Check for Updates",
+      "description": "Automatically check for newer versions when opening the Multiplayer menu.",
+      "default": true
+    },
+    "funny-loading-messages": {
+      "type": "bool",
+      "name": "Funny Loading Messages",
+      "description": "Show flavor text while connecting to a host.",
+      "default": true
+    },
+    "cloud-section": {
+      "type": "title",
+      "name": "Cloud Hosting"
+    },
+    "cloud-hosting-url": {
+      "type": "string",
+      "name": "Cloud Hosting URL (WIP)",
+      "description": "The URL of the dedicated server used for uploading and hosting local levels.",
+      "default": "http://localhost:7575",
+      "filter": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:/.?&=-_"
+    },
+    "cloud-auth-token": {
+      "type": "string",
+      "name": "Cloud Auth Token",
+      "description": "Your private token for uploading and managing levels on the Cloud Server. Get this from the server admin.",
+      "default": ""
     }
   },
   "tags": [
     "editor",
     "enhancement",
     "utility",
-    "customization"
+    "customization",
+    "online",
+    "content"
   ]
 }
