@@ -83,6 +83,7 @@ test("restores snapshot locks using their remaining lifetime", (t) => {
   room.handleMessage(hostId, proto.serializeSyncLevelStart(1, 1, {
     saveString: "", audioTrack: 0, songID: 0, levelLength: 0, levelName: "Test level",
   }));
+  room.handleMessage(hostId, proto.serializeSyncLevelChunk(0, Buffer.from("level-data"), ["object-1"]));
   room.handleMessage(hostId, proto.serializeSyncLocksChunk([
     { uuid: "object-1", playerId: hostId, timeLeft: 2 },
   ]));
