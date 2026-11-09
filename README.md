@@ -1,69 +1,41 @@
-# <span style="display: flex; align-items: center; gap: .25em"><img src="logo.svg" width="50"> Alt3rEdit</span>
+# Alt3rEdit
 
-> [!WARNING]
-> **Alt3rEdit is a community-maintained fork of BetterEdit.** The original upstream project is no longer being developed. Alt3rEdit retains the upstream LGPLv3 license and credits its original contributors.
-
-<span>
-  <a href="LICENSE"><img alt="License Badge" src="https://img.shields.io/github/license/HJfod/BetterEdit?label=license&style=flat-square" /></a>
-  &ensp;&macr;&ensp;
-  <a href="https://github.com/HJfod/BetterEdit/issues"><img alt="GitHub Issues - Open" src="https://img.shields.io/github/issues/HJfod/BetterEdit?style=flat-square" /></a>
-  <a href="https://github.com/HJfod/BetterEdit/issues"><img alt="GitHub Issues - Closed" src="https://img.shields.io/github/issues-closed/HJfod/BetterEdit?style=flat-square" /></a>
-  &ensp;&macr;&ensp;
-  <a href="https://github.com/HJfod/BetterEdit/pulls"><img alt="GitHub Pull Requests - Open" src="https://img.shields.io/github/issues-pr/HJfod/BetterEdit?style=flat-square" /></a>
-  <a href="https://github.com/HJfod/BetterEdit/pulls"><img alt="GitHub Pull Requests - Closed" src="https://img.shields.io/github/issues-pr-closed/HJfod/BetterEdit?style=flat-square" /></a>
-  &ensp;&macr;&ensp;
-  <a href="https://github.com/HJfod/BetterEdit/actions/workflows/build.yml"><img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/HJFod/BetterEdit/build.yml?style=flat-square" /></a>
-</span>
-
-<br>
-
-A community-maintained mod that improves the <a href="https://store.steampowered.com/app/322170/Geometry_Dash/">Geometry Dash</a> editor.
-
-## :rocket: Installation
-
-You can install BetterEdit through [Geode](https://geode-sdk.org). After installing Geode, simply search for the mod on the in-game browser, and click install.
-
-**BetterEdit needs the following mods to also be installed:**
-
- * [NodeIDs](https://geode-sdk.org/mods/geode.node-ids)
- * [GMD API](https://geode-sdk.org/mods/hjfod.gmd-api)
- * [Level ID API](https://geode-sdk.org/mods/cvolton.level-id-api)
- * [Editor Tab API](https://geode-sdk.org/mods/alphalaneous.editortab_api)
-
-## :beetle: Bug reports & feature suggestions
-
-You can use [Issues](https://github.com/HJfod/BetterEdit/issues) to report bugs and suggest new features! Click [here](https://github.com/HJfod/BetterEdit/issues/new/choose) to open up a new issue.
-
-Please use the correct templates for your issue - badly formatted issues will be closed.
-
-| Issue template name | What it's for |
-| ------------------- | ------------- |
-| Bug Report          | Reporting a bug with the mod, such as some feature not working as expected, some buttons being misplaced, etc. |
-| Crash Report        | Reporting a crash with the mod (i.e. when the game closes unexpectedly) |
-| Suggestion          | Suggesting a new feature to be added to the mod / changes to an existing feature |
-
-## :speech_balloon: Contact
-
-BetterEdit has a [Discord server](https://discord.gg/rPvFW4jQTJ); this is where you can go if you need any further information, wish to ask questions, or anything else!
-
-[<img alt="BetterEdit Discord Server Banner" src="https://discordapp.com/api/guilds/1087452688956006471/widget.png?style=banner2" />](https://discord.gg/rPvFW4jQTJ)
-
-You can also contact the developer of the mod (HJfod) directly through Discord or Twitter/X.
-
- * Discord: `@hjfod`
- * Twitter: [`hjfod`](https://twitter.com/hjfod)
-
-## :euro: Support
-
-BetterEdit's development is supported via [donations on my Ko-fi](https://ko-fi.com/hjfod)!
+**Alt3rEdit** — community-maintained fork of BetterEdit for the Geometry Dash editor. The project combines editor quality-of-life tools with additional features and an integrated multiplayer mode.
 
 > [!NOTE]
-> Supporters used to receive exclusive features, however these features have since been made free. You may still support if you want to say thanks for my work on BetterEdit and Geode, but please be aware that this will NOT come with any exclusive features anymore!
+> This branch targets **Geometry Dash with Geode SDK 5.11.2**. It is an integration/development branch; platform builds and in-game behavior still need to be verified before treating it as a stable release.
 
-## :balance_scale: Licensing
+## Features
 
-**BetterEdit is licensed under the [LGPLv3](https://www.gnu.org/licenses/lgpl-3.0.en.html) license.**
+- Improved editor menus and workflows.
+- Enhanced color, font, movement, and view controls.
+- Custom grid sizes, UI scaling, and editor keybinds.
+- Formula Tool (`f(x)`) for mathematical object placement and transformations.
+- Multiplayer sessions with room browsing, synchronization, chat, player cursors, and session status.
+- Multiplayer-related undo/revert and remote-action handling.
 
-This means **you cannot create closed-source versions of BetterEdit**. You, however, *can* create separate closed-source mods that depend on BetterEdit.
+Multiplayer availability depends on compatible server/signaling infrastructure and may be subject to change while this integration is being tested.
 
-This is to ensure that nobody piggybacks off the hundreds of hours of work spent by myself and other developers, without providing proper credit in the form of the free version! :blush:
+## Installation
+
+Install Geode for your Geometry Dash version, then install Alt3rEdit from a compatible Geode index/release when one is published.
+
+This development branch is not guaranteed to have a published package. Building from source requires the Geode SDK **v5.11.2** and the dependencies configured in `CMakeLists.txt`.
+
+## Bug reports and suggestions
+
+Please open an issue in the [Alt3rEdit repository](https://github.com/djdhsvsbdb-design/Alt3rEdit/issues). Include:
+- Geometry Dash version and platform.
+- Geode version.
+- Alt3rEdit version or commit.
+- Steps to reproduce the issue and relevant logs.
+
+For multiplayer issues, also include whether the problem occurs while joining a room, synchronizing a level, or using chat/cursors. Do not post passwords, access tokens, or other private credentials.
+
+## Credits
+
+Alt3rEdit builds on the original [BetterEdit](https://github.com/HJfod/BetterEdit) project and incorporates the Formula Tool and multiplayer work maintained in the Alt3rEdit/MPEdit code lineage. Multiplayer upstream attribution and permission details are recorded in [MULTIPLAYER_NOTICE.md](MULTIPLAYER_NOTICE.md).
+
+## License
+
+Alt3rEdit retains the upstream project's **LGPL-3.0** licensing terms. See [LICENSE](LICENSE) and the notices accompanying imported components for details.
