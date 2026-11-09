@@ -171,7 +171,9 @@ class Room {
                 this._onBanPlayer(playerId, data);
                 break;
             case proto.Opcode.SetViewOnly:
-                this._relayFrom(playerId, data);
+                if (playerId === this.hostPlayerId) {
+                    this._relayFrom(playerId, data);
+                }
                 break;
             case proto.Opcode.ChatMessage:
                 this._onChatMessage(playerId, data);
