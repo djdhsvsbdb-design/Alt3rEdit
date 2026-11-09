@@ -379,8 +379,11 @@ namespace mpedit {
             auto req = geode::utils::web::WebRequest();
             req.header("ngrok-skip-browser-warning", "1");
             req.header("Content-Type", "application/json");
-            auto body = matjson::makeObject({{"playerName", playerName},
-            {"iconStr", fmt::format("{}:{}:{}:{}:{}", GameManager::sharedState()->getPlayerFrame(), GameManager::sharedState()->getPlayerColor(), GameManager::sharedState()->getPlayerColor2(), GameManager::sharedState()->getPlayerGlow() ? 1 : 0, GameManager::sharedState()->getPlayerGlowColor())}});
+            auto body = matjson::makeObject({
+                {"playerName", playerName},
+                {"hostToken", m_signalingHostToken},
+                {"iconStr", fmt::format("{}:{}:{}:{}:{}", GameManager::sharedState()->getPlayerFrame(), GameManager::sharedState()->getPlayerColor(), GameManager::sharedState()->getPlayerColor2(), GameManager::sharedState()->getPlayerGlow() ? 1 : 0, GameManager::sharedState()->getPlayerGlowColor())}
+            });
             req.bodyJSON(body);
             async::spawn(req.send("POST", url));
         }
@@ -491,6 +494,19 @@ namespace mpedit {
                     auto json = res.json().unwrapOr(matjson::Value());
                     auto roomCode = json.get<std::string>("roomCode").unwrapOr("");
                     m_signalingRoomId = json.get<std::string>("roomId").unwrapOr("");
+                    m_signalingHostToken = json.get<std::string>("hostToken").unwrapOr("");
+                    if (m_signalingHostToken.empty()) {
+                        std::vector<ErrorCb> callbacks;
+                        {
+                            std::lock_guard lock(m_stateMutex);
+                            m_error = "Signaling error: server did not provide a host token";
+                            m_state.store(State::Error);
+                            callbacks = m_onError;
+                        }
+                        for (auto& cb : callbacks) cb(m_error);
+                        m_signalingActive = false;
+                        return;
+                    }
 
                     m_turnServers.clear();
                     if (json.contains("turnServers") && json["turnServers"].isArray()) {
@@ -611,6 +627,11 @@ namespace mpedit {
         float timeoutSec = 20.0f;
 
         auto url = getSignalingUrl() + "/rooms/" + code + "/signal?role=" + role + "&playerId=" + std::to_string(playerId) + "&timeout=" + std::to_string(static_cast<int>(timeoutSec * 1000));
+        if (role == "host" && !m_signalingHostToken.empty()) {
+            url += "&hostToken=" + m_signalingHostToken;
+        } else if (role == "client" && !m_signalingPlayerToken.empty()) {
+            url += "&sessionToken=" + m_signalingPlayerToken;
+        }
 
         auto req = web::WebRequest();
         req.header("ngrok-skip-browser-warning", "1");
@@ -660,7 +681,13 @@ namespace mpedit {
         auto req = web::WebRequest();
         req.header("ngrok-skip-browser-warning", "1");
         req.header("Content-Type", "application/json");
-        req.bodyJSON(msg);
+        matjson::Value body = msg;
+        if (!m_signalingHostToken.empty()) {
+            body.set("hostToken", m_signalingHostToken);
+        } else if (!m_signalingPlayerToken.empty()) {
+            body.set("sessionToken", m_signalingPlayerToken);
+        }
+        req.bodyJSON(body);
         async::spawn(req.post(url));
     }
 
@@ -874,11 +901,12 @@ namespace mpedit {
                 if (res.ok()) {
                     auto json = res.json().unwrapOr(matjson::Value());
                     m_localPlayerId = json.get<int>("playerId").unwrapOr(-1);
+                    m_signalingPlayerToken = json.get<std::string>("sessionToken").unwrapOr("");
                     auto hostName = json.get<std::string>("hostName").unwrapOr("Host");
                     auto hostIconStr = json.get<std::string>("hostIconStr").unwrapOr("");
                     int hostColorIndex = json.get<int>("hostColorIndex").unwrapOr(0);
 
-                    if (m_localPlayerId < 0) {
+                    if (m_localPlayerId < 0 || m_signalingPlayerToken.empty()) {
                         std::vector<ErrorCb> callbacks;
                         std::string err;
                         {
@@ -1513,7 +1541,7 @@ namespace mpedit {
         }
 
         if (m_role == Role::Host && !m_roomCode.empty()) {
-            auto url = getSignalingUrl() + "/rooms/" + m_roomCode;
+            auto url = getSignalingUrl() + "/rooms/" + m_roomCode + "?hostToken=" + m_signalingHostToken;
             auto req = web::WebRequest();
             req.header("ngrok-skip-browser-warning", "1");
             async::spawn(req.send("DELETE", url));
@@ -1524,7 +1552,10 @@ namespace mpedit {
             auto req = geode::utils::web::WebRequest();
             req.header("ngrok-skip-browser-warning", "1");
             req.header("Content-Type", "application/json");
-            auto body = matjson::makeObject({{"playerId", m_localPlayerId}});
+            auto body = matjson::makeObject({
+                {"playerId", m_localPlayerId},
+                {"sessionToken", m_signalingPlayerToken}
+            });
             req.bodyJSON(body);
             async::spawn(req.post(url));
         }
@@ -1557,6 +1588,8 @@ namespace mpedit {
         m_state.store(State::Disconnected);
         m_nextPlayerId = 1;
         m_signalingRoomId.clear();
+        m_signalingHostToken.clear();
+        m_signalingPlayerToken.clear();
         m_turnServers.clear();
 
         log::info("P2PManager: Session ended");
