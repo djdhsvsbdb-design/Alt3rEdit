@@ -87,6 +87,7 @@ test("restores snapshot locks using their remaining lifetime", (t) => {
   room.handleMessage(hostId, proto.serializeSyncLocksChunk([
     { uuid: "object-1", playerId: hostId, timeLeft: 2 },
   ]));
+  room.handleMessage(hostId, proto.serializeSyncLevelEnd());
 
   const lock = room.locks.get("object-1");
   assert.ok(lock);
