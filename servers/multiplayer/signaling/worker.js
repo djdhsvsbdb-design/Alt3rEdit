@@ -1,5 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
-import { isHostTokenValid, getPlayerForSessionToken } from "./auth.js";
+import auth from "./auth.js";
+const { isHostTokenValid, getPlayerForSessionToken } = auth;
 
 const CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const ROOM_TTL = 2 * 60 * 60 * 1000;
