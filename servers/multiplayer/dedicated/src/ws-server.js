@@ -1,6 +1,7 @@
 const http = require("http");
 const WebSocket = require("ws");
 const proto = require("./protocol");
+const { escapeHtml, listBackupFiles } = require("./backup-utils");
 class WSServer {
   constructor(roomManager) {
     this.roomManager = roomManager;
@@ -107,9 +108,6 @@ class WSServer {
       const fsModule = require('fs');
       const path = require('path');
       const levelsDir = path.join(__dirname, '..', 'levels');
-      const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (ch) => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      })[ch]);
       const roomNameHtml = escapeHtml(room.levelName);
       const roomCodeHtml = escapeHtml(room.code);
       
@@ -131,12 +129,7 @@ class WSServer {
       `;
 
       try {
-        const prefix = `${room.code}_`;
-        const legacyPrefix = room.levelName.replace(/[^a-zA-Z0-9]/g, '_');
-        const matchFiles = fsModule.readdirSync(levelsDir).filter((f) =>
-          (f.startsWith(prefix) || f.startsWith(legacyPrefix)) && f.endsWith('.gmd') &&
-          fsModule.statSync(path.join(levelsDir, f)).isFile()
-        );
+        const matchFiles = listBackupFiles(fsModule, levelsDir, room);
         
         if (matchFiles.length === 0) {
           html += `<p>No backup files found yet. Save the level in-game to create a backup!</p>`;
