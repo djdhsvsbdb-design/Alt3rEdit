@@ -55,6 +55,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Check JavaScript syntax
+        working-directory: servers/multiplayer/dedicated
+        run: |
+          find . -type f -name '*.js' -not -path './node_modules/*' -print0 | xargs -0 -n1 node --check
+          node --check --input-type=module < ../signaling/worker.js
       - name: Run dedicated server tests
         working-directory: servers/multiplayer/dedicated
         run: npm test
