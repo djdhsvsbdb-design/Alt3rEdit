@@ -26,6 +26,10 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
 # as standalone translation units.
 list(FILTER SOURCES EXCLUDE REGEX "/features/formula-tool/.*\\.cpp$")
 
+# Scrapped BetterEdit experiments are archival code, not shipped features.
+# The scripting experiment depends on an unbundled QuickJS-NG engine.
+list(FILTER SOURCES EXCLUDE REGEX "/scrapped-features/.*\\.cpp$")
+
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src PRIVATE src/multiplayer)
 
