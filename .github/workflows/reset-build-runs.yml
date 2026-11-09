@@ -1,0 +1,64 @@
+name: Reset queued build runs
+
+on:
+  push:
+    branches:
+      - feature/multiplayer-geode-5.11.2
+    paths:
+      - .github/workflows/reset-build-runs.yml
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  reset:
+    name: Cancel old builds and start one clean build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel active runs and dispatch one build
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const workflow_id = "build.yml";
+            const branch = "feature/multiplayer-geode-5.11.2";
+
+            let stableEmptyChecks = 0;
+            for (let attempt = 0; attempt < 90 && stableEmptyChecks < 5; attempt++) {
+              const { data } = await github.rest.actions.listWorkflowRuns({
+                owner, repo, workflow_id, branch, per_page: 100
+              });
+
+              const active = data.workflow_runs.filter(run => run.status !== "completed");
+              if (active.length > 0) {
+                stableEmptyChecks = 0;
+                core.info(`Canceling ${active.length} active build run(s).`);
+                await Promise.all(active.map(async run => {
+                  try {
+                    await github.rest.actions.cancelWorkflowRun({
+                      owner, repo, run_id: run.id
+                    });
+                  } catch (error) {
+                    if (error.status !== 409 && error.status !== 422) throw error;
+                    core.info(`Run ${run.id} was already stopping or completed.`);
+                  }
+                }));
+              } else {
+                stableEmptyChecks++;
+                core.info(`No active build runs (${stableEmptyChecks}/5).`);
+              }
+
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+
+            if (stableEmptyChecks < 5) {
+              throw new Error("Could not clear the old build queue; refusing to start another build.");
+            }
+
+            await github.rest.actions.createWorkflowDispatch({
+              owner, repo, workflow_id, ref: branch
+            });
+            core.notice("Old build runs are cleared. Dispatched exactly one fresh build.");
