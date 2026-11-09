@@ -56,6 +56,30 @@ test("only the room moderator can ban another player", (t) => {
   assert.equal(room.players.has(guestId), false);
 });
 
+
+test("only the room moderator can change player view-only state", (t) => {
+  const room = makeRoom();
+  t.after(() => room.destroy());
+  const hostMessages = [];
+  const hostId = room.addPlayer("Host", 0, {
+    readyState: 1, send(data) { hostMessages.push(data); }, close() {},
+  });
+  const guestId = room.addPlayer("Guest", 0, { readyState: 1, send() {}, close() {} });
+  hostMessages.length = 0;
+
+  const writer = new proto.Writer();
+  writer.writeOpcode(proto.Opcode.SetViewOnly);
+  writer.writeU32(guestId);
+  writer.writeBool(true);
+  const message = writer.finish();
+
+  room.handleMessage(guestId, message);
+  assert.equal(hostMessages.length, 0);
+
+  room.handleMessage(hostId, message);
+  assert.equal(hostMessages.length, 1);
+});
+
 test("rejects unsolicited snapshots from clients that were not asked", (t) => {
   const room = makeRoom();
   t.after(() => room.destroy());
