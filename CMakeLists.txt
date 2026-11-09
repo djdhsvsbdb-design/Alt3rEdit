@@ -20,6 +20,12 @@ endif()
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
 
+# Formula Tool's implementation files are intentionally included by
+# src/features/FormulaTool.cpp so they share its Geode/Cocos declarations
+# and private popup class definitions. Do not compile these fragments again
+# as standalone translation units.
+list(FILTER SOURCES EXCLUDE REGEX "/features/formula-tool/.*\\.cpp$")
+
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC src PRIVATE src/multiplayer)
 
