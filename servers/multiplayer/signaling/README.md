@@ -9,11 +9,13 @@ Because the mod uses WebRTC Data Channels, players connect directly to each othe
 1. Go to your [Cloudflare Dashboard](https://dash.cloudflare.com/) and navigate to **Compute (Workers & Pages)**.
 2. Create or select your Worker.
 3. Click **Edit code** on the top right.
-4. Paste the contents of `worker.js` into `index.js`.
+4. Set `worker.js` as the Worker entry point and add `auth.mjs` as a second module file in the same Worker project.
 5. Under **Bindings**, ensure a Durable Object binding is set:
    - **Variable name:** `SIGNALING_HUB`
    - **Class name:** `SignalingHub`
 6. Click **Deploy**.
+
+The entry point imports `auth.mjs`; deploying only `worker.js` will fail.
 
 ## Using Your Custom Server
 
@@ -24,10 +26,10 @@ In Geometry Dash, go to the Multiplayer Edit mod settings and change the **Signa
 1. **Host** creates a room -> POSTs to `/rooms` and receives a 6-character room code and private host token.
 2. **Guests** join using the room code -> POSTs to `/rooms/:code/join` and receives a private session token and the Host's metadata.
 3. Host and guest tokens authenticate polling and signaling; room codes alone cannot delete rooms, ban players, or inject signaling messages.
-3. **Guest** generates a WebRTC Offer and POSTs it to the signaling server.
-4. **Host** polls for Offers, retrieves the Guest's Offer, generates an Answer, and POSTs it back.
-5. **Guest** polls for Answers and retrieves the Host's Answer.
-6. Direct P2P connection is established! The signaling server is no longer used for this session.
+4. **Guest** generates a WebRTC Offer and POSTs it to the signaling server.
+5. **Host** polls for Offers, retrieves the Guest's Offer, generates an Answer, and POSTs it back.
+6. **Guest** polls for Answers and retrieves the Host's Answer.
+7. Direct P2P connection is established! The signaling server is no longer used for this session.
 
 ## API Endpoints
 
