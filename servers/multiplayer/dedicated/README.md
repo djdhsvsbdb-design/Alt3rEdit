@@ -100,6 +100,10 @@ If you want to allow players (or yourself) to upload levels to the dedicated ser
 3. They can now go to their "My Levels" tab in-game and click the **Host** button on any of their levels to instantly put it up on the server! 
 4. Players can go to Multiplayer -> Servers -> "My Hosted Rooms" to view, change settings, or shut down any rooms they have uploaded.
 
+## In-Game Room Moderation
+
+The first player to connect to a dedicated room becomes its moderator and can kick, ban, or change other players' view-only state. If that player disconnects, moderation is transferred to the next connected player. Server operators can always manage players through the terminal commands below.
+
 ## Admin Commands
 
 Use these commands in the server terminal. Commands that target a specific room require you to focus on that room first using `/focus`, unless the server is only hosting one level (in which case it auto-focuses).
