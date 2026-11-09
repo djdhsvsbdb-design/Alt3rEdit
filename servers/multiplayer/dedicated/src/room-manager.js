@@ -11,6 +11,7 @@ class RoomManager {
     this.signalingUrl = "https://dewy-flea-9364.d050.deno.net";
     this.publicListing = false;
     this.manifestPath = path.join(process.cwd(), "rooms.json");
+    this.tokensPath = path.join(process.cwd(), "tokens.json");
     this.autosaveInterval = 5;
     this.loadTokens();
     this.port = 7575;
@@ -187,9 +188,12 @@ class RoomManager {
   loadTokens() {
     this.tokens = new Set();
     try {
-      if (fs.existsSync("tokens.json")) {
-        const data = JSON.parse(fs.readFileSync("tokens.json", "utf8"));
-        data.forEach((t) => this.tokens.add(t));
+      if (fs.existsSync(this.tokensPath)) {
+        const data = JSON.parse(fs.readFileSync(this.tokensPath, "utf8"));
+        if (!Array.isArray(data)) throw new Error("tokens.json must contain an array");
+        for (const token of data) {
+          if (typeof token === "string" && token.length > 0) this.tokens.add(token);
+        }
       }
     } catch (e) {
       console.error("Failed to load tokens.json:", e.message);
@@ -199,7 +203,7 @@ class RoomManager {
   saveTokens() {
     try {
       fs.writeFileSync(
-        "tokens.json",
+        this.tokensPath,
         JSON.stringify(Array.from(this.tokens), null, 2),
       );
     } catch (e) {
@@ -219,8 +223,7 @@ class RoomManager {
   }
 
   isValidToken(token) {
-    if (this.tokens.size === 0) return true;
-    return this.tokens.has(token);
+    return typeof token === "string" && token.length > 0 && this.tokens.has(token);
   }
 
   getRoom(code) {
