@@ -744,12 +744,6 @@
       "description": "Filters profanity in lobby names and chat.",
       "default": true
     },
-    "check-updates": {
-      "type": "bool",
-      "name": "Check for Updates",
-      "description": "Automatically check for newer versions when opening the Multiplayer menu.",
-      "default": true
-    },
     "funny-loading-messages": {
       "type": "bool",
       "name": "Funny Loading Messages",
