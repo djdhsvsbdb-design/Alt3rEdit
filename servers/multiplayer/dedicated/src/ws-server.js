@@ -9,7 +9,7 @@ class WSServer {
     this.server.headersTimeout = 0;
     this.wss = new WebSocket.Server({
       noServer: true,
-      maxPayload: 250 * 1024 * 1024,
+      maxPayload: 32 * 1024 * 1024,
     });
     this.server.on("upgrade", (request, socket, head) => {
       const url = new URL(request.url, `http://${request.headers.host}`);
@@ -107,6 +107,11 @@ class WSServer {
       const fsModule = require('fs');
       const path = require('path');
       const levelsDir = path.join(__dirname, '..', 'levels');
+      const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[ch]);
+      const roomNameHtml = escapeHtml(room.levelName);
+      const roomCodeHtml = escapeHtml(room.code);
       
       let html = `
         <!DOCTYPE html>
@@ -122,13 +127,16 @@ class WSServer {
           </style>
         </head>
         <body>
-          <h1>Files for "${room.levelName}" (Code: ${code})</h1>
+          <h1>Files for "${roomNameHtml}" (Code: ${roomCodeHtml})</h1>
       `;
 
       try {
         const prefix = `${room.code}_`;
         const legacyPrefix = room.levelName.replace(/[^a-zA-Z0-9]/g, '_');
-        const matchFiles = files.filter(f => (f.startsWith(prefix) || f.startsWith(legacyPrefix)) && f.endsWith('.gmd'));
+        const matchFiles = fsModule.readdirSync(levelsDir).filter((f) =>
+          (f.startsWith(prefix) || f.startsWith(legacyPrefix)) && f.endsWith('.gmd') &&
+          fsModule.statSync(path.join(levelsDir, f)).isFile()
+        );
         
         if (matchFiles.length === 0) {
           html += `<p>No backup files found yet. Save the level in-game to create a backup!</p>`;
@@ -143,7 +151,7 @@ class WSServer {
             html += `
               <div class="file-card">
                 <div>
-                  <strong>${f}</strong><br>
+                  <strong>${escapeHtml(f)}</strong><br>
                   <small style="color: #aaa;">${sizeKB} KB • ${date}</small>
                 </div>
                 <a href="${dlLink}" class="btn">Download</a>
