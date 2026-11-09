@@ -64,6 +64,7 @@ jobs:
         run: |
           find . -type f -name '*.js' -not -path './node_modules/*' -print0 | xargs -0 -n1 node --check
           node --check --input-type=module < ../signaling/worker.js
+          node --check ../signaling/auth.mjs
       - name: Run dedicated server tests
         working-directory: servers/multiplayer/dedicated
         run: npm test
