@@ -22,7 +22,7 @@ test("normalizes invalid startup configuration before server initialization", ()
   assert.equal(config.port, 7575);
   assert.equal(config.maxPlayers, 0);
   assert.equal(config.password, "");
-  assert.equal(config.autosaveInterval, 5);
+  assert.equal(config.autosaveInterval, 0);
   assert.equal(config.defaultViewOnly, false);
 });
 
