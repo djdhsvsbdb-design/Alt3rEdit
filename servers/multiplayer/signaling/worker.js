@@ -1,4 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
+import { isHostTokenValid, getPlayerForSessionToken } from "./auth.js";
 
 const CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const ROOM_TTL = 2 * 60 * 60 * 1000;
@@ -281,10 +282,12 @@ export class SignalingHub extends DurableObject {
             const { hostName, playerName, roomName, description, playerLimit, isPrivate, hasPassword, password, version, iconStr, colorIndex } = body;
             const code = this.genCode();
             const roomId = crypto.randomUUID();
+            const hostToken = crypto.randomUUID();
             const host = hostName || playerName || "Unknown";
 
             const roomObj = {
                 roomId,
+                hostToken,
                 hostName: host,
                 iconStr: iconStr || "",
                 colorIndex: typeof colorIndex === "number" ? colorIndex : 0,
@@ -306,7 +309,7 @@ export class SignalingHub extends DurableObject {
             this.saveRooms(true);
 
             const turnServers = await this.getTurnServers();
-            const resData = { roomCode: code, roomId };
+            const resData = { roomCode: code, roomId, hostToken };
             if (turnServers) resData.turnServers = turnServers;
             return json(resData);
         }
@@ -321,11 +324,15 @@ export class SignalingHub extends DurableObject {
                 roomCode: code,
                 hostName: room.hostName,
                 playerCount: room.players.length,
-                roomId: room.roomId,
             });
         }
 
         if (parts.length === 2 && req.method === "DELETE") {
+            const room = this.rooms.get(code);
+            if (!room) return json({ error: "room not found" }, 404);
+            if (!isHostTokenValid(room, url.searchParams.get("hostToken"))) {
+                return json({ error: "forbidden" }, 403);
+            }
             this.deleteRoom(code);
             this.saveRooms(true);
             return json({ ok: true });
@@ -348,8 +355,12 @@ export class SignalingHub extends DurableObject {
                 return json({ error: "room full" }, 400);
             }
 
+            if (typeof playerName !== "string" || !playerName.trim()) {
+                return json({ error: "invalid player name" }, 400);
+            }
             const playerId = room.nextId++;
-            room.players.push({ id: playerId, name: playerName });
+            const sessionToken = crypto.randomUUID();
+            room.players.push({ id: playerId, name: playerName, sessionToken });
 
             const joinMsg = {
                 type: "client_joined",
@@ -364,6 +375,7 @@ export class SignalingHub extends DurableObject {
             const turnServers = await this.getTurnServers();
             const resData = {
                 playerId,
+                sessionToken,
                 hostName: room.hostName,
                 hostIconStr: room.iconStr || "",
                 hostColorIndex: typeof room.colorIndex === "number" ? room.colorIndex : 0
@@ -373,9 +385,13 @@ export class SignalingHub extends DurableObject {
         }
 
         if (action === "ban" && req.method === "POST") {
-            const { playerName } = await req.json().catch(() => ({}));
+            const { playerName, hostToken } = await req.json().catch(() => ({}));
             const room = this.rooms.get(code);
             if (!room) return json({ error: "room not found" }, 404);
+            if (!isHostTokenValid(room, hostToken)) return json({ error: "forbidden" }, 403);
+            if (typeof playerName !== "string" || !playerName.trim()) {
+                return json({ error: "invalid player name" }, 400);
+            }
 
             if (!room.banned) room.banned = [];
             if (!room.banned.includes(playerName)) {
@@ -386,9 +402,11 @@ export class SignalingHub extends DurableObject {
         }
 
         if (action === "leave" && req.method === "POST") {
-            const { playerId } = await req.json().catch(() => ({}));
+            const { playerId, sessionToken } = await req.json().catch(() => ({}));
             const room = this.rooms.get(code);
             if (!room) return json({ error: "room not found" }, 404);
+            const player = getPlayerForSessionToken(room, playerId, sessionToken);
+            if (!player || player.id === 0) return json({ error: "forbidden" }, 403);
 
             room.players = room.players.filter(p => p.id !== playerId);
             this.saveRooms();
@@ -398,11 +416,22 @@ export class SignalingHub extends DurableObject {
         if (action === "signal" && req.method === "GET") {
             const role = url.searchParams.get("role");
             const playerId = Number(url.searchParams.get("playerId") || "0");
-            const queueName = role === "host" ? "hostQueue" : `clientQueue_${playerId}`;
-
             const room = this.rooms.get(code);
-            if (role === "host" && room) {
+            if (!room) return json({ error: "room not found" }, 404);
+            let queueName;
+            if (role === "host") {
+                if (!isHostTokenValid(room, url.searchParams.get("hostToken"))) {
+                    return json({ error: "forbidden" }, 403);
+                }
                 room.lastPing = Date.now();
+                queueName = "hostQueue";
+            } else if (role === "client") {
+                if (!getPlayerForSessionToken(room, playerId, url.searchParams.get("sessionToken"))) {
+                    return json({ error: "forbidden" }, 403);
+                }
+                queueName = `clientQueue_${playerId}`;
+            } else {
+                return json({ error: "invalid role" }, 400);
             }
 
             const initialMsgs = this.dequeue(code, queueName);
@@ -438,19 +467,34 @@ export class SignalingHub extends DurableObject {
         }
 
         if (action === "signal" && req.method === "POST") {
-            const msg = await req.json().catch(() => ({}));
+            const room = this.rooms.get(code);
+            if (!room) return json({ error: "room not found" }, 404);
+            const msg = await req.json().catch(() => null);
+            if (!msg || typeof msg !== "object" || typeof msg.type !== "string") {
+                return json({ error: "invalid signaling message" }, 400);
+            }
+
             let targetQueue = "";
-
-            if (msg.type === "offer" || (msg.type === "candidate" && msg.targetPlayerId !== undefined)) {
-                targetQueue = `clientQueue_${msg.targetPlayerId}`;
-            } else if (msg.type === "answer" || (msg.type === "candidate" && msg.playerId !== undefined)) {
-                targetQueue = "hostQueue";
+            if (isHostTokenValid(room, msg.hostToken)) {
+                const targetId = Number(msg.targetPlayerId);
+                const target = room.players.find((player) => player.id === targetId && targetId !== 0);
+                if ((msg.type === "offer" || msg.type === "candidate") && target) {
+                    targetQueue = `clientQueue_${targetId}`;
+                }
+            } else {
+                const senderId = Number(msg.playerId);
+                const sender = getPlayerForSessionToken(room, senderId, msg.sessionToken);
+                if (sender && sender.id !== 0 &&
+                    (msg.type === "answer" || (msg.type === "candidate" && senderId === Number(msg.playerId)))) {
+                    targetQueue = "hostQueue";
+                }
             }
 
-            if (targetQueue) {
-                this.enqueue(code, targetQueue, msg);
-            }
-
+            if (!targetQueue) return json({ error: "forbidden or invalid signaling target" }, 403);
+            const queuedMessage = { ...msg };
+            delete queuedMessage.hostToken;
+            delete queuedMessage.sessionToken;
+            this.enqueue(code, targetQueue, queuedMessage);
             return json({ ok: true });
         }
 
