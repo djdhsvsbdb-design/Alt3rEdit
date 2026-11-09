@@ -44,6 +44,8 @@ jobs:
           bindings-ref: main
           combine: true
           target: ${{ matrix.config.target }}
+          # Disable the flaky sccache download in CI; compile without a compiler cache.
+          ccache-variant: ""
   
   package:
     name: Package builds
